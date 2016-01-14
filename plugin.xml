@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="com.telerik.plugins.healthkit"
+        id="com.incentfit.plugins.healthkit"
         version="0.3.9">
 
   <name>HealthKit</name>
@@ -9,15 +9,15 @@
     Interact with the iOS8 HealthKit SDK
   </description>
 
-  <author>Eddy Verbruggen / Telerik</author>
+  <author>IncentFit</author>
 
   <license>MIT</license>
 
   <keywords>Health, HealthKit, Fit, Fitness, Birthdate, Gender, Height, Weight, Workout</keywords>
 
-  <repo>https://github.com/Telerik-Verified-Plugins/HealthKit.git</repo>
+  <repo>https://github.com/incentfit/HealthKit.git</repo>
 
-  <issue>https://github.com/Telerik-Verified-Plugins/HealthKit/issues</issue>
+  <issue>https://github.com/incentfit/HealthKit/issues</issue>
 
   <engines>
     <engine name="cordova" version=">=3.0.0"/>
