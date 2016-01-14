@@ -35,6 +35,13 @@
         <param name="ios-package" value="HealthKit"/>
       </feature>
     </config-file>
+    
+        <config-file target="*-Info.plist" parent="UIBackgroundModes">
+            <array>
+                <string>fetch</string>
+                <string>remote-notification</string>
+            </array>
+        </config-file>
 
     <!-- commented this because it means you can't use the app on iPad -->
     <!--config-file target="*-Info.plist" parent="UIRequiredDeviceCapabilities">
