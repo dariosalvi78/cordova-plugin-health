@@ -49,8 +49,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Health plugin Android code.
- * MIT licensed.
+ * Health plugin Android code. MIT licensed.
  */
 public class HealthPlugin extends CordovaPlugin {
   // logger tag
@@ -86,10 +85,12 @@ public class HealthPlugin extends CordovaPlugin {
     datatypes.put("distance", DataType.TYPE_DISTANCE_DELTA);
     datatypes.put("blood_glucose", HealthDataTypes.TYPE_BLOOD_GLUCOSE);
     datatypes.put("blood_pressure", HealthDataTypes.TYPE_BLOOD_PRESSURE);
+    datatypes.put("body_temperature", HealthDataTypes.TYPE_BODY_TEMPERATURE);
     datatypes.put("sleep", DataType.TYPE_SLEEP_SEGMENT);
   }
 
-  // Helper class used for storing nutrients information (name and unit of measurement)
+  // Helper class used for storing nutrients information (name and unit of
+  // measurement)
   private static class NutrientFieldInfo {
     public String field;
     public String unit;
@@ -146,13 +147,14 @@ public class HealthPlugin extends CordovaPlugin {
   // asks for dynamic permissions on Android 6 and more
   private void requestDynamicPermissions() {
     HashSet<String> dynPerms = new HashSet<>();
-    // see https://developers.google.com/fit/android/authorization#data_types_that_need_android_permissions
+    // see
+    // https://developers.google.com/fit/android/authorization#data_types_that_need_android_permissions
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       // new Android 10 permissions
-      if (authReadTypes.contains("steps") || authReadTypes.contains("activity")
-        || authReadWriteTypes.contains("steps") || authReadWriteTypes.contains("activity")
-        || authReadWriteTypes.contains("calories") || authReadWriteTypes.contains("calories.active")) {
+      if (authReadTypes.contains("steps") || authReadTypes.contains("activity") || authReadWriteTypes.contains("steps")
+          || authReadWriteTypes.contains("activity") || authReadWriteTypes.contains("calories")
+          || authReadWriteTypes.contains("calories.active")) {
         if (!cordova.hasPermission(Manifest.permission.ACTIVITY_RECOGNITION))
           dynPerms.add(Manifest.permission.ACTIVITY_RECOGNITION);
       }
@@ -173,7 +175,8 @@ public class HealthPlugin extends CordovaPlugin {
         cordova.requestPermissions(this, REQUEST_DYN_PERMS, dynPerms.toArray(new String[dynPerms.size()]));
         // the request results will be taken care of by onRequestPermissionResult()
       } else {
-        // if should not autoresolve, and there are dynamic permissions needed, send a false
+        // if should not autoresolve, and there are dynamic permissions needed, send a
+        // false
         authReqCallbackCtx.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
       }
     }
@@ -181,7 +184,8 @@ public class HealthPlugin extends CordovaPlugin {
 
   // called when the dynamic permissions are asked
   @Override
-  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
+      throws JSONException {
     if (requestCode == REQUEST_DYN_PERMS) {
       for (int i = 0; i < grantResults.length; i++) {
         if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
@@ -200,16 +204,19 @@ public class HealthPlugin extends CordovaPlugin {
   }
 
   /**
-   * The "execute" method that Cordova calls whenever the plugin is used from the JavaScript
+   * The "execute" method that Cordova calls whenever the plugin is used from the
+   * JavaScript
    *
    * @param action          The action to execute.
    * @param args            The exec() arguments.
-   * @param callbackContext The callback context used when calling back into JavaScript.
+   * @param callbackContext The callback context used when calling back into
+   *                        JavaScript.
    * @return
    * @throws JSONException
    */
   @Override
-  public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
+  public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext)
+      throws JSONException {
 
     if ("isAvailable".equals(action)) {
       isAvailable(callbackContext);
@@ -339,19 +346,17 @@ public class HealthPlugin extends CordovaPlugin {
    */
   private void disconnect(final CallbackContext callbackContext) {
     if (this.account != null) {
-      Fitness.getConfigClient(this.cordova.getContext(), this.account)
-        .disableFit()
-        .addOnSuccessListener(r -> {
-          callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
-        })
-        .addOnFailureListener(err -> {
-          err.getCause().printStackTrace();
-          callbackContext.error("cannot disconnect," + err.getMessage());
-        });
+      Fitness.getConfigClient(this.cordova.getContext(), this.account).disableFit().addOnSuccessListener(r -> {
+        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
+      }).addOnFailureListener(err -> {
+        err.getCause().printStackTrace();
+        callbackContext.error("cannot disconnect," + err.getMessage());
+      });
     }
   }
 
-  // prompts to install GooglePlayServices if not available then Google Fit if not available
+  // prompts to install GooglePlayServices if not available then Google Fit if not
+  // available
   private void promptInstall(final CallbackContext callbackContext) {
     GoogleApiAvailability gapi = GoogleApiAvailability.getInstance();
     int apiresult = gapi.isGooglePlayServicesAvailable(this.cordova.getActivity());
@@ -367,11 +372,14 @@ public class HealthPlugin extends CordovaPlugin {
         pm.getPackageInfo("com.google.android.apps.fitness", PackageManager.GET_ACTIVITIES);
       } catch (PackageManager.NameNotFoundException e) {
         // show popup for downloading app
-        // code from http://stackoverflow.com/questions/11753000/how-to-open-the-google-play-store-directly-from-my-android-application
+        // code from
+        // http://stackoverflow.com/questions/11753000/how-to-open-the-google-play-store-directly-from-my-android-application
         try {
-          cordova.getActivity().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.apps.fitness")));
+          cordova.getActivity().startActivity(
+              new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.apps.fitness")));
         } catch (android.content.ActivityNotFoundException anfe) {
-          cordova.getActivity().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness")));
+          cordova.getActivity().startActivity(new Intent(Intent.ACTION_VIEW,
+              Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.fitness")));
         }
       }
     }
@@ -400,11 +408,8 @@ public class HealthPlugin extends CordovaPlugin {
         authReqCallbackCtx.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
       } else {
         // launches activity for auth, resolved in onActivityResult
-        GoogleSignIn.requestPermissions(
-          this.cordova.getActivity(), // your activity
-          REQUEST_OAUTH,
-          this.account,
-          options);
+        GoogleSignIn.requestPermissions(this.cordova.getActivity(), // your activity
+            REQUEST_OAUTH, this.account, options);
       }
     } else {
       // all done!
@@ -422,14 +427,16 @@ public class HealthPlugin extends CordovaPlugin {
       } else if (resultCode == Activity.RESULT_CANCELED) {
         // The user cancelled the login dialog before selecting any action.
         authReqCallbackCtx.error("User cancelled the dialog");
-      } else authReqCallbackCtx.error("Authorisation failed, result code " + resultCode);
+      } else
+        authReqCallbackCtx.error("Authorisation failed, result code " + resultCode);
     }
   }
 
   // check if the app is authorised to use Google fitness APIs
   // if autoresolve is set, it will try to get authorisation from the user
   // also includes some OS dynamic permissions if needed (eg location)
-  private void checkAuthorization(final JSONArray args, final CallbackContext callbackContext, final boolean autoresolve) throws JSONException {
+  private void checkAuthorization(final JSONArray args, final CallbackContext callbackContext,
+      final boolean autoresolve) throws JSONException {
     this.cordova.setActivityResultCallback(this);
     authReqCallbackCtx = callbackContext;
     authAutoresolve = autoresolve;
@@ -464,7 +471,6 @@ public class HealthPlugin extends CordovaPlugin {
     requestDynamicPermissions();
   }
 
-
   // queries for datapoints
   private void query(final JSONArray args, final CallbackContext callbackContext) throws Exception {
     if (!args.getJSONObject(0).has("startDate")) {
@@ -497,14 +503,12 @@ public class HealthPlugin extends CordovaPlugin {
     DataReadRequest.Builder readRequestBuilder = new DataReadRequest.Builder();
     readRequestBuilder.setTimeRange(st, et, TimeUnit.MILLISECONDS);
 
-    if (dt.equals(DataType.TYPE_STEP_COUNT_DELTA) && args.getJSONObject(0).has("filtered") && args.getJSONObject(0).getBoolean("filtered")) {
+    if (dt.equals(DataType.TYPE_STEP_COUNT_DELTA) && args.getJSONObject(0).has("filtered")
+        && args.getJSONObject(0).getBoolean("filtered")) {
       // exceptional case for filtered steps
-      DataSource filteredStepsSource = new DataSource.Builder()
-        .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-        .setType(DataSource.TYPE_DERIVED)
-        .setStreamName("estimated_steps")
-        .setAppPackageName("com.google.android.gms")
-        .build();
+      DataSource filteredStepsSource = new DataSource.Builder().setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+          .setType(DataSource.TYPE_DERIVED).setStreamName("estimated_steps").setAppPackageName("com.google.android.gms")
+          .build();
 
       readRequestBuilder.read(filteredStepsSource);
     } else {
@@ -518,7 +522,7 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
     Task<DataReadResponse> queryTask = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .readData(readRequestBuilder.build());
+        .readData(readRequestBuilder.build());
 
     DataReadResponse response = Tasks.await(queryTask);
     if (!response.getStatus().isSuccess()) {
@@ -538,10 +542,12 @@ public class HealthPlugin extends CordovaPlugin {
         DataSource dataSource = datapoint.getOriginalDataSource();
         if (dataSource != null) {
           String sourceBundleId = dataSource.getAppPackageName();
-          if (sourceBundleId != null) obj.put("sourceBundleId", sourceBundleId);
+          if (sourceBundleId != null)
+            obj.put("sourceBundleId", sourceBundleId);
         }
 
-        //reference for fields: https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field.html
+        // reference for fields:
+        // https://developers.google.com/android/reference/com/google/android/gms/fitness/data/Field.html
         if (dt.equals(DataType.TYPE_STEP_COUNT_DELTA)) {
           int steps = datapoint.getValue(Field.FIELD_STEPS).asInt();
           obj.put("value", steps);
@@ -570,7 +576,8 @@ public class HealthPlugin extends CordovaPlugin {
                 dob.put("meal_type", "lunch");
               else if (mealt == Field.MEAL_TYPE_SNACK)
                 dob.put("meal_type", "snack");
-              else dob.put("meal_type", "unknown");
+              else
+                dob.put("meal_type", "unknown");
             }
             if (datapoint.getValue(Field.FIELD_NUTRIENTS) != null) {
               Value v = datapoint.getValue(Field.FIELD_NUTRIENTS);
@@ -619,15 +626,17 @@ public class HealthPlugin extends CordovaPlugin {
           obj.put("value", activity);
           obj.put("unit", "activityType");
 
-          //extra queries to get calorie and distance records related to the activity times
+          // extra queries to get calorie and distance records related to the activity
+          // times
           DataReadRequest.Builder readActivityRequestBuilder = new DataReadRequest.Builder();
-          readActivityRequestBuilder.setTimeRange(datapoint.getStartTime(TimeUnit.MILLISECONDS), datapoint.getEndTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
-            .read(DataType.TYPE_DISTANCE_DELTA)
-            .read(DataType.TYPE_CALORIES_EXPENDED);
+          readActivityRequestBuilder.setTimeRange(datapoint.getStartTime(TimeUnit.MILLISECONDS),
+              datapoint.getEndTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS).read(DataType.TYPE_DISTANCE_DELTA)
+              .read(DataType.TYPE_CALORIES_EXPENDED);
 
           Task<DataReadResponse> activityTask = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-            .readData(readActivityRequestBuilder.build());
-          // Active wait. This is not very efficient, but otherwise the code would become hard to structure
+              .readData(readActivityRequestBuilder.build());
+          // Active wait. This is not very efficient, but otherwise the code would become
+          // hard to structure
           DataReadResponse dataReadActivityResult = Tasks.await(activityTask);
 
           if (!dataReadActivityResult.getStatus().isSuccess()) {
@@ -657,8 +666,8 @@ public class HealthPlugin extends CordovaPlugin {
           JSONObject glucob = new JSONObject();
           float glucose = datapoint.getValue(HealthFields.FIELD_BLOOD_GLUCOSE_LEVEL).asFloat();
           glucob.put("glucose", glucose);
-          if (datapoint.getValue(HealthFields.FIELD_TEMPORAL_RELATION_TO_MEAL).isSet() &&
-            datapoint.getValue(Field.FIELD_MEAL_TYPE).isSet()) {
+          if (datapoint.getValue(HealthFields.FIELD_TEMPORAL_RELATION_TO_MEAL).isSet()
+              && datapoint.getValue(Field.FIELD_MEAL_TYPE).isSet()) {
             int temp_to_meal = datapoint.getValue(HealthFields.FIELD_TEMPORAL_RELATION_TO_MEAL).asInt();
             String meal = "";
             if (temp_to_meal == HealthFields.FIELD_TEMPORAL_RELATION_TO_MEAL_AFTER_MEAL) {
@@ -746,7 +755,11 @@ public class HealthPlugin extends CordovaPlugin {
           }
           obj.put("value", bpobj);
           obj.put("unit", "mmHg");
-        }  else if (dt.equals(DataType.TYPE_SLEEP_SEGMENT)) {
+        } else if (dt.equals(HealthDataTypes.TYPE_BODY_TEMPERATURE)) {
+          float bodyTemp = datapoint.getValue(HealthFields.FIELD_BODY_TEMPERATURE).asFloat();
+          obj.put("value", bodyTemp);
+          obj.put("unit", "celsius");
+        } else if (dt.equals(DataType.TYPE_SLEEP_SEGMENT)) {
           String sleepSegmentType = "";
           switch (datapoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt()) {
             case SleepStages.AWAKE:
@@ -776,10 +789,10 @@ public class HealthPlugin extends CordovaPlugin {
     }
     callbackContext.success(resultset);
 
-
   }
 
-  // utility function, gets nutrients from a Value and merges the value inside a json object
+  // utility function, gets nutrients from a Value and merges the value inside a
+  // json object
   private JSONObject getNutrients(Value nutrientsMap, JSONObject mergewith) throws JSONException {
     JSONObject nutrients;
     if (mergewith != null) {
@@ -855,7 +868,8 @@ public class HealthPlugin extends CordovaPlugin {
       bucketType = args.getJSONObject(0).getString("bucket");
       if (!bucketType.equalsIgnoreCase("hour") && !bucketType.equalsIgnoreCase("day")) {
         customBucket = true;
-        if (!bucketType.equalsIgnoreCase("week") && !bucketType.equalsIgnoreCase("month") && !bucketType.equalsIgnoreCase("year")) {
+        if (!bucketType.equalsIgnoreCase("week") && !bucketType.equalsIgnoreCase("month")
+            && !bucketType.equalsIgnoreCase("year")) {
           // error
           callbackContext.error("Bucket type " + bucketType + " not recognised");
           return;
@@ -920,12 +934,9 @@ public class HealthPlugin extends CordovaPlugin {
     if (datatype.equalsIgnoreCase("steps")) {
       if (args.getJSONObject(0).has("filtered") && args.getJSONObject(0).getBoolean("filtered")) {
         // exceptional case for filtered steps
-        DataSource filteredStepsSource = new DataSource.Builder()
-          .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-          .setType(DataSource.TYPE_DERIVED)
-          .setStreamName("estimated_steps")
-          .setAppPackageName("com.google.android.gms")
-          .build();
+        DataSource filteredStepsSource = new DataSource.Builder().setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .setType(DataSource.TYPE_DERIVED).setStreamName("estimated_steps")
+            .setAppPackageName("com.google.android.gms").build();
         builder.aggregate(filteredStepsSource, DataType.AGGREGATE_STEP_COUNT_DELTA);
       } else {
         builder.aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA);
@@ -971,7 +982,7 @@ public class HealthPlugin extends CordovaPlugin {
 
     DataReadRequest readRequest = builder.build();
     Task<DataReadResponse> task = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .readData(readRequest);
+        .readData(readRequest);
 
     try {
       DataReadResponse dataReadResult = Tasks.await(task);
@@ -1002,7 +1013,7 @@ public class HealthPlugin extends CordovaPlugin {
           }
         }
       } else {
-        //there will be only one bucket spanning all the period
+        // there will be only one bucket spanning all the period
         retBucket = new JSONObject();
         retBucket.put("startDate", st);
         retBucket.put("endDate", et);
@@ -1032,18 +1043,18 @@ public class HealthPlugin extends CordovaPlugin {
 
         if (hasbucket) {
           if (customBucket) {
-            //find the bucket among customs
+            // find the bucket among customs
             for (int i = 0; i < retBucketsArr.length(); i++) {
               retBucket = retBucketsArr.getJSONObject(i);
               long bst = retBucket.getLong("startDate");
               long bet = retBucket.getLong("endDate");
               if (bucket.getStartTime(TimeUnit.MILLISECONDS) >= bst
-                && bucket.getEndTime(TimeUnit.MILLISECONDS) <= bet) {
+                  && bucket.getEndTime(TimeUnit.MILLISECONDS) <= bet) {
                 break;
               }
             }
           } else {
-            //pick the current
+            // pick the current
             retBucket = new JSONObject();
             retBucket.put("startDate", bucket.getStartTime(TimeUnit.MILLISECONDS));
             retBucket.put("endDate", bucket.getEndTime(TimeUnit.MILLISECONDS));
@@ -1060,7 +1071,8 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("activity")) {
               retBucket.put("unit", "activitySummary");
               // query per bucket time to get distance and calories per activity
-              JSONObject actobj = getAggregatedActivityDistanceCalories(bucket.getStartTime(TimeUnit.MILLISECONDS), bucket.getEndTime(TimeUnit.MILLISECONDS));
+              JSONObject actobj = getAggregatedActivityDistanceCalories(bucket.getStartTime(TimeUnit.MILLISECONDS),
+                  bucket.getEndTime(TimeUnit.MILLISECONDS));
               retBucket.put("value", actobj);
             } else if (datatype.equalsIgnoreCase("nutrition.water")) {
               retBucket.put("unit", "ml");
@@ -1132,11 +1144,11 @@ public class HealthPlugin extends CordovaPlugin {
               retBucket.put("value", actobj);
             }
           }
-        } //end of data set loop
+        } // end of data set loop
         if (datatype.equalsIgnoreCase("calories.basal")) {
           double basals = retBucket.getDouble("value");
           if (!atleastone) {
-            //when no basal is available, use the daily average
+            // when no basal is available, use the daily average
             basals += basalAVG;
             retBucket.put("value", basals);
           }
@@ -1149,8 +1161,10 @@ public class HealthPlugin extends CordovaPlugin {
           }
         }
       } // end of buckets loop
-      if (hasbucket) callbackContext.success(retBucketsArr);
-      else callbackContext.success(retBucket);
+      if (hasbucket)
+        callbackContext.success(retBucketsArr);
+      else
+        callbackContext.success(retBucket);
     } catch (Exception e) {
       callbackContext.error(e.getMessage());
     }
@@ -1159,15 +1173,12 @@ public class HealthPlugin extends CordovaPlugin {
   private JSONObject getAggregatedActivityDistanceCalories(long st, long et) throws Exception {
     JSONObject actobj = new JSONObject();
 
-    DataReadRequest readActivityDistCalRequest = new DataReadRequest.Builder()
-      .aggregate(DataType.TYPE_DISTANCE_DELTA)
-      .aggregate(DataType.TYPE_CALORIES_EXPENDED)
-      .bucketByActivityType(1, TimeUnit.SECONDS)
-      .setTimeRange(st, et, TimeUnit.MILLISECONDS)
-      .build();
+    DataReadRequest readActivityDistCalRequest = new DataReadRequest.Builder().aggregate(DataType.TYPE_DISTANCE_DELTA)
+        .aggregate(DataType.TYPE_CALORIES_EXPENDED).bucketByActivityType(1, TimeUnit.SECONDS)
+        .setTimeRange(st, et, TimeUnit.MILLISECONDS).build();
 
     Task<DataReadResponse> task = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .readData(readActivityDistCalRequest);
+        .readData(readActivityDistCalRequest);
 
     DataReadResponse dataActivityDistCalReadResult = Tasks.await(task);
     if (!dataActivityDistCalReadResult.getStatus().isSuccess()) {
@@ -1175,7 +1186,7 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
     for (Bucket activityBucket : dataActivityDistCalReadResult.getBuckets()) {
-      //each bucket is an activity
+      // each bucket is an activity
       float distance = 0;
       float calories = 0;
       String activity = activityBucket.getActivity();
@@ -1209,13 +1220,12 @@ public class HealthPlugin extends CordovaPlugin {
     return actobj;
   }
 
-
   // utility function that gets the basal metabolic rate averaged over a week
   private float getBasalAVG(long _et) throws Exception {
     float basalAVG = 0;
     Calendar cal = java.util.Calendar.getInstance();
     cal.setTime(new Date(_et));
-    //set start time to a week before end time
+    // set start time to a week before end time
     cal.add(Calendar.WEEK_OF_YEAR, -1);
     long nst = cal.getTimeInMillis();
 
@@ -1226,7 +1236,7 @@ public class HealthPlugin extends CordovaPlugin {
     DataReadRequest readRequest = builder.build();
 
     Task<DataReadResponse> task = Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .readData(readRequest);
+        .readData(readRequest);
 
     DataReadResponse dataReadResult = Tasks.await(task);
 
@@ -1238,7 +1248,8 @@ public class HealthPlugin extends CordovaPlugin {
     int avgsN = 0;
     for (Bucket bucket : dataReadResult.getBuckets()) {
       // in the com.google.bmr.summary data type, each data point represents
-      // the average, maximum and minimum basal metabolic rate, in kcal per day, over the time interval of the data point.
+      // the average, maximum and minimum basal metabolic rate, in kcal per day, over
+      // the time interval of the data point.
       DataSet ds = bucket.getDataSet(DataType.AGGREGATE_BASAL_METABOLIC_RATE_SUMMARY);
       for (DataPoint dp : ds.getDataPoints()) {
         float avg = dp.getValue(Field.FIELD_AVERAGE).asFloat();
@@ -1247,7 +1258,8 @@ public class HealthPlugin extends CordovaPlugin {
       }
     }
     // do the average of the averages
-    if (avgsN != 0) basalAVG /= avgsN; // this a daily average
+    if (avgsN != 0)
+      basalAVG /= avgsN; // this a daily average
     return basalAVG;
   }
 
@@ -1289,11 +1301,8 @@ public class HealthPlugin extends CordovaPlugin {
       return;
     }
 
-    DataSource datasrc = new DataSource.Builder()
-      .setAppPackageName(sourceBundleId)
-      .setDataType(dt)
-      .setType(DataSource.TYPE_RAW)
-      .build();
+    DataSource datasrc = new DataSource.Builder().setAppPackageName(sourceBundleId).setDataType(dt)
+        .setType(DataSource.TYPE_RAW).build();
 
     DataSet.Builder dataSetBuilder = DataSet.builder(datasrc);
     DataPoint.Builder datapointBuilder = DataPoint.builder(datasrc);
@@ -1334,7 +1343,7 @@ public class HealthPlugin extends CordovaPlugin {
       datapointBuilder.setField(Field.FIELD_VOLUME, nuv);
     } else if (dt.equals(DataType.TYPE_NUTRITION)) {
       if (datatype.startsWith("nutrition.")) {
-        //it's a single nutrient
+        // it's a single nutrient
         NutrientFieldInfo nuf = nutrientFields.get(datatype);
         float nuv = (float) args.getJSONObject(0).getDouble("value");
         Map<String, Float> value = new HashMap<>();
@@ -1353,7 +1362,8 @@ public class HealthPlugin extends CordovaPlugin {
             datapointBuilder.setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_SNACK);
           else if (mealtype.equalsIgnoreCase("dinner"))
             datapointBuilder.setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_DINNER);
-          else datapointBuilder.setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_UNKNOWN);
+          else
+            datapointBuilder.setField(Field.FIELD_MEAL_TYPE, Field.MEAL_TYPE_UNKNOWN);
         }
         String item = nutrobj.getString("item");
         if (item != null && !item.isEmpty()) {
@@ -1447,18 +1457,19 @@ public class HealthPlugin extends CordovaPlugin {
         float diastolic = (float) bpobj.getDouble("diastolic");
         datapointBuilder.setField(HealthFields.FIELD_BLOOD_PRESSURE_DIASTOLIC, diastolic);
       }
+    } else if (dt == HealthDataTypes.TYPE_BODY_TEMPERATURE) {
+      float bodyTemp = (float) args.getJSONObject(0).getDouble("value");
+      datapointBuilder.setField(HealthFields.FIELD_BLOOD_PRESSURE_DIASTOLIC, bodyTemp);
     }
     dataSetBuilder.add(datapointBuilder.build());
 
-    Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .insertData(dataSetBuilder.build())
-      .addOnSuccessListener(r -> {
-        callbackContext.success();
-      })
-      .addOnFailureListener(err -> {
-        err.getCause().printStackTrace();
-        callbackContext.error(err.getMessage());
-      });
+    Fitness.getHistoryClient(this.cordova.getContext(), this.account).insertData(dataSetBuilder.build())
+        .addOnSuccessListener(r -> {
+          callbackContext.success();
+        }).addOnFailureListener(err -> {
+          err.getCause().printStackTrace();
+          callbackContext.error(err.getMessage());
+        });
   }
 
   // deletes data points in a given time window
@@ -1485,19 +1496,14 @@ public class HealthPlugin extends CordovaPlugin {
       return;
     }
 
-    DataDeleteRequest request = new DataDeleteRequest.Builder()
-      .setTimeInterval(st, et, TimeUnit.MILLISECONDS)
-      .addDataType(dt)
-      .build();
+    DataDeleteRequest request = new DataDeleteRequest.Builder().setTimeInterval(st, et, TimeUnit.MILLISECONDS)
+        .addDataType(dt).build();
 
-    Fitness.getHistoryClient(this.cordova.getContext(), this.account)
-      .deleteData(request)
-      .addOnSuccessListener(r -> {
-        callbackContext.success();
-      })
-      .addOnFailureListener(err -> {
-        err.getCause().printStackTrace();
-        callbackContext.error(err.getMessage());
-      });
+    Fitness.getHistoryClient(this.cordova.getContext(), this.account).deleteData(request).addOnSuccessListener(r -> {
+      callbackContext.success();
+    }).addOnFailureListener(err -> {
+      err.getCause().printStackTrace();
+      callbackContext.error(err.getMessage());
+    });
   }
 }
