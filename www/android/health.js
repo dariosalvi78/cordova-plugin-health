@@ -2,7 +2,44 @@ var exec = require("cordova/exec");
 
 var Health = function () {
   this.name = "health";
+  this.supported_queries = new Set(["steps", "calories", "calories.basal", "activity",
+                            "height", "weight", "heart_rate", "fat_percentage",
+                            "distance", "oxygen_saturation", "blood_glucose",
+                            "blood_pressure", "sleep", "nutrition.calories",
+                            "nutrition.fat.total", "nutrition.fat.saturated",
+                            "nutrition.fat.unsaturated","nutrition.fat.polyunsaturated",
+                            "nutrition.fat.monounsaturated", "nutrition.fat.trans",
+                            "nutrition.cholesterol", "nutrition.sodium",
+                            "nutrition.potassium", "nutrition.carbs.total",
+                            "nutrition.dietary_fiber", "nutrition.sugar", "nutrition.water",
+                            "nutrition.protein", "nutrition.vitamin_a", "nutrition",
+                            "nutrition.vitamin_c", "nutrition.calcium", "nutrition.iron"]);
 };
+
+Health.prototype.filter_datatypes = function(datatypes){
+  var new_data_type = [];
+  for(var i=0; i<datatypes.length; i++){
+    if (typeof(datatypes[i]) == "object"){
+      var readOnlyDtypes = datatypes[i]["read"];
+      var writeOnlyDtypes = datatypes[i]["write"];
+      var newWriteOnlyDtypes = [];
+      var newReadOnlyDtypes = [];
+      if(!!readOnlyDtypes){
+        newReadOnlyDtypes = this.filter_datatypes(readOnlyDtypes);
+      }
+      if(!!writeOnlyDtypes){
+        newWriteOnlyDtypes = this.filter_datatypes(writeOnlyDtypes);
+      }
+      new_data_type.push({"read" : newReadOnlyDtypes, "write" : newWriteOnlyDtypes});
+    }
+    else {
+      if (this.supported_queries.has(datatypes[i])){
+        new_data_type.push(datatypes[i]);
+      }
+    }
+  }
+  return new_data_type;
+}
 
 Health.prototype.isAvailable = function (onSuccess, onError) {
   exec(onSuccess, onError, "health", "isAvailable", []);
@@ -17,7 +54,7 @@ Health.prototype.promptInstallFit = function (onSuccess, onError) {
 };
 
 Health.prototype.requestAuthorization = function (datatypes, onSuccess, onError) {
-  exec(onSuccess, onError, "health", "requestAuthorization", datatypes);
+  exec(onSuccess, onError, "health", "requestAuthorization", this.filter_datatypes(datatypes));
 };
 
 Health.prototype.isAuthorized = function (datatypes, onSuccess, onError) {
