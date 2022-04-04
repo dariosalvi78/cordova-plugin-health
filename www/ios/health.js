@@ -51,6 +51,33 @@ dataTypes['oxygen_saturation'] = 'HKQuantityTypeIdentifierOxygenSaturation';
 dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
 dataTypes['temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
 
+dataTypes['biotin'] = 'HKQuantityTypeIdentifierDietaryBiotin';
+dataTypes['chloride'] = 'HKQuantityTypeIdentifierDietaryChloride';
+dataTypes['chromium'] = 'HKQuantityTypeIdentifierDietaryChromium';
+dataTypes['copper'] = 'HKQuantityTypeIdentifierDietaryCopper';
+dataTypes['folate'] = 'HKQuantityTypeIdentifierDietaryFolate';
+dataTypes['iodine'] = 'HKQuantityTypeIdentifierDietaryIodine';
+dataTypes['magnesium'] = 'HKQuantityTypeIdentifierDietaryMagnesium';
+dataTypes['manganese'] = 'HKQuantityTypeIdentifierDietaryManganese';
+dataTypes['molybdenum'] = 'HKQuantityTypeIdentifierDietaryMolybdenum';
+dataTypes['niacin'] = 'HKQuantityTypeIdentifierDietaryNiacin';
+dataTypes['pantothenic_acid'] = 'HKQuantityTypeIdentifierDietaryPantothenicAcid';
+dataTypes['phosphorus'] = 'HKQuantityTypeIdentifierDietaryPhosphorus';
+dataTypes['riboflavin'] = 'HKQuantityTypeIdentifierDietaryRiboflavin';
+dataTypes['selenium'] = 'HKQuantityTypeIdentifierDietarySelenium';
+dataTypes['thiamin'] = 'HKQuantityTypeIdentifierDietaryThiamin';
+dataTypes['vitamin_B6'] = 'HKQuantityTypeIdentifierDietaryVitaminB6';
+dataTypes['vitamin_B12'] = 'HKQuantityTypeIdentifierDietaryVitaminB12';
+dataTypes['vitamin_D'] = 'HKQuantityTypeIdentifierDietaryVitaminD';
+dataTypes['vitamin_E'] = 'HKQuantityTypeIdentifierDietaryVitaminE';
+dataTypes['vitamin_K'] = 'HKQuantityTypeIdentifierDietaryVitaminK';
+dataTypes['zinc'] = 'HKQuantityTypeIdentifierDietaryZinc';
+dataTypes['bmi'] = 'HKQuantityTypeIdentifierBodyMassIndex';
+dataTypes['lean_body_mass'] = 'HKQuantityTypeIdentifierLeanBodyMass';
+dataTypes['sleep'] = 'HKCategoryTypeIdentifierSleepAnalysis';
+dataTypes['stand_time'] = 'HKQuantityTypeIdentifierAppleStandTime';
+dataTypes['flights_climbed'] = 'HKQuantityTypeIdentifierFlightsClimbed';
+
 // for parseable units in HK, see https://developer.apple.com/documentation/healthkit/hkunit/1615733-unitfromstring?language=objc
 var units = [];
 units['steps'] = 'count';
@@ -324,6 +351,17 @@ Health.prototype.query = function (opts, onSuccess, onError) {
           else if (opts.unit) res.unit = opts.unit;
           res.sourceName = samples[i].sourceName;
           res.sourceBundleId = samples[i].sourceBundleId;
+          res.sourceProductType = samples[i].sourceProductType;
+          res.sourceOSVersion = '';
+          if (samples[i].sourceOSVersionMajor || typeof samples[i].sourceOSVersionPatch == 'number') {
+            res.sourceOSVersion += samples[i].sourceOSVersionMajor;
+          }
+          if (samples[i].sourceOSVersionMinor || typeof samples[i].sourceOSVersionPatch == 'number') {
+            res.sourceOSVersion += '.' + samples[i].sourceOSVersionMinor;
+          }
+          if (samples[i].sourceOSVersionPatch || typeof samples[i].sourceOSVersionPatch == 'number') {
+            res.sourceOSVersion += '.' + samples[i].sourceOSVersionPatch;
+          }
           result.push(res);
         }
       };
