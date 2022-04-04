@@ -1393,9 +1393,13 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                           entry[HKPluginKeyEndDate] = [HealthKit stringFromDate:endSample];
                                                                           entry[HKPluginKeyUUID] = sample.UUID.UUIDString;
 
-                                                                          //@TODO Update deprecated API calls
-                                                                          entry[HKPluginKeySourceName] = sample.source.name;
-                                                                          entry[HKPluginKeySourceBundleId] = sample.source.bundleIdentifier;
+                                                                          entry[HKPluginKeySourceName] = sample.sourceRevision.source.name;
+                                                                          entry[HKPluginKeySourceBundleId] = sample.sourceRevision.source.bundleIdentifier;
+                                                                          entry[@"sourceProductType"] = sample.sourceRevision.productType;
+                                                                          entry[@"sourceVersion"] = sample.sourceRevision.version;
+                                                                          entry[@"sourceOSVersionMajor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
+                                                                          entry[@"sourceOSVersionMinor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.minorVersion];
+                                                                          entry[@"sourceOSVersionPatch"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.patchVersion];
 
                                                                           if (sample.metadata == nil || ![NSJSONSerialization isValidJSONObject:sample.metadata]) {
                                                                               entry[HKPluginKeyMetadata] = @{};
