@@ -92,16 +92,21 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 
 | Data type       | Unit  |    HealthKit equivalent                       |  Google Fit equivalent                   |
 |-----------------|-------|-----------------------------------------------|------------------------------------------|
+| mindfulness     | min   | HKCategoryTypeIdentifierMindfulSession        | N/A                                      |
 | steps           | count | HKQuantityTypeIdentifierStepCount             | TYPE_STEP_COUNT_DELTA                    |
-| stairs           | count | HKQuantityTypeIdentifierFlightsClimbed             | NA                    |
+| stairs          | count | HKQuantityTypeIdentifierFlightsClimbed             | NA                    |
 | distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | TYPE_DISTANCE_DELTA |
 | appleExerciseTime | min | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
+| flights_climbed | count | HKQuantityTypeIdentifierFlightsClimbed       |                                          |
+| stand_time | min | HKQuantityTypeIdentifierDietaryVitaminE       |                                          |
 | calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TYPE_CALORIES_EXPENDED |
 | calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | TYPE_CALORIES_EXPENDED - (TYPE_BASAL_METABOLIC_RATE * time window) |
 | calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | TYPE_BASAL_METABOLIC_RATE * time window  |
 | activity        | activityType | HKWorkoutTypeIdentifier + HKCategoryTypeIdentifierSleepAnalysis | TYPE_ACTIVITY_SEGMENT |
 | height          | m     | HKQuantityTypeIdentifierHeight                | TYPE_HEIGHT                              |
 | weight          | kg    | HKQuantityTypeIdentifierBodyMass              | TYPE_WEIGHT                              |
+| bmi            | count | HKQuantityTypeIdentifierBodyMassIndex       |                                          |
+| lean_body_mass | kg | HKQuantityTypeIdentifierLeanBodyMass       |                                          |
 | heart_rate      | count/min | HKQuantityTypeIdentifierHeartRate         | TYPE_HEART_RATE_BPM                      |
 | heart_rate.resting | count/min | HKQuantityTypeIdentifierRestingHearRate | TBD                      |
 | heart_rate.variability      | ms | HKQuantityTypeIdentifierHeartRateVariabilitySDNN         | NA                   |
@@ -119,7 +124,28 @@ As HealthKit does not allow adding custom data types, only a subset of data type
 | gender          |       | HKCharacteristicTypeIdentifierBiologicalSex   | NA        |
 | date_of_birth   |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
 | mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
+| sleep | N/A | HKCategoryTypeIdentifierSleepAnalysis       |                                          |
 | nutrition       |       | HKCorrelationTypeIdentifierFood               | TYPE_NUTRITION                           |
+| nutrition.biotin | mcg | HKQuantityTypeIdentifierDietaryBiotin         |                                          |
+| nutrition.chloride | mg | HKQuantityTypeIdentifierDietaryChloride       |                                          |
+| nutrition.chromium | mcg | HKQuantityTypeIdentifierDietaryChromium       |                                          |
+| nutrition.copper | mg | HKQuantityTypeIdentifierDietaryCopper       |                                          |
+| nutrition.folate | mcg | HKQuantityTypeIdentifierDietaryFolate       |                                          |
+| nutrition.iodine | mcg | HKQuantityTypeIdentifierDietaryIodine       |                                          |
+| nutrition.magnesium | mg | HKQuantityTypeIdentifierDietaryMagnesium       |                                          |
+| nutrition.molybdenum | mg | HKQuantityTypeIdentifierDietaryMolybdenum       |                                          |
+| nutrition.niacin | mg | HKQuantityTypeIdentifierDietaryNiacin       |                                          |
+| nutrition.pantothenic_acid | mg | HKQuantityTypeIdentifierDietaryPantothenicAcid       |                                          |
+| nutrition.phosphorus | mg | HKQuantityTypeIdentifierDietaryPhosphorus       |                                          |
+| nutrition.riboflavin | mg | HKQuantityTypeIdentifierDietaryRiboflavin       |                                          |
+| nutrition.selenium | mcg | HKQuantityTypeIdentifierDietarySelenium       |                                          |
+| nutrition.thiamin | mg | HKQuantityTypeIdentifierDietaryThiamin       |                                          |
+| nutrition.vitamin_B6 | mg | HKQuantityTypeIdentifierDietaryVitaminB6       |                                          |
+| nutrition.vitamin_B12 | mcg | HKQuantityTypeIdentifierDietaryVitaminB12       |                                          |
+| nutrition.vitamin_D | mcg | HKQuantityTypeIdentifierDietaryVitaminD       |                                          |
+| nutrition.vitamin_E | mg | HKQuantityTypeIdentifierDietaryVitaminE       |                                          |
+| nutrition.vitamin_K | mcg | HKQuantityTypeIdentifierDietaryVitaminK       |                                          |
+| nutrition.zinc | mg | HKQuantityTypeIdentifierDietaryZinc       |                                          |
 | nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | TYPE_NUTRITION, NUTRIENT_CALORIES      |
 | nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | TYPE_NUTRITION, NUTRIENT_TOTAL_FAT       |
 | nutrition.fat.saturated | g | HKQuantityTypeIdentifierDietaryFatSaturated | TYPE_NUTRITION, NUTRIENT_SATURATED_FAT |
