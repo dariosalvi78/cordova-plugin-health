@@ -58,12 +58,19 @@
       <string>$HEALTH_WRITE_PERMISSION</string>
     </config-file>
 
+
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit">
       <true/>
+    </config-file>
+    <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit.access">
+      <array />
     </config-file>
 
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit">
       <true/>
+    </config-file>
+    <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit.access">
+      <array/>
     </config-file>
 
     <header-file src="src/ios/WorkoutActivityConversion.h"/>
