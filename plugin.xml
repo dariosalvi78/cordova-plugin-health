@@ -61,8 +61,24 @@
     <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit">
       <true/>
     </config-file>
+    <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit.access">
+      <array>
+        <string>health-records</string>
+      </array>
+    </config-file>
+    <config-file target="*/Entitlements-Debug.plist" parent="com.apple.developer.healthkit.background-delivery">
+      <true/>
+    </config-file>
 
     <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit">
+      <true/>
+    </config-file>
+    <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit.access">
+      <array>
+        <string>health-records</string>
+      </array>
+    </config-file>
+    <config-file target="*/Entitlements-Release.plist" parent="com.apple.developer.healthkit.background-delivery">
       <true/>
     </config-file>
 
