@@ -85,13 +85,13 @@ units['distance'] = 'm';
 units['calories'] = 'kcal';
 units['calories.active'] = 'kcal';
 units['calories.basal'] = 'kcal';
-units['height'] = 'm';
+units['height'] = 'cm';
 units['weight'] = 'kg';
 units['heart_rate'] = 'count/min';
 units['heart_rate.resting'] = 'count/min';
 units['heart_rate.variability'] = 'ms';
 units['fat_percentage'] = '%';
-units['waist_circumference'] = 'm';
+units['waist_circumference'] = 'cm';
 units['nutrition'] = ['g', 'ml', 'kcal'];
 units['nutrition.calories'] = 'kcal';
 units['nutrition.fat.total'] = 'g';
@@ -290,10 +290,50 @@ Health.prototype.query = function (opts, onSuccess, onError) {
         if ((res.startDate >= opts.startDate) && (res.endDate <= opts.endDate)) {
           res.value = data[i].activityType;
           res.unit = 'activityType';
-          if (data[i].energy) res.calories = parseInt(data[i].energy);
-          if (data[i].distance) res.distance = parseInt(data[i].distance);
+          if (data[i].energy) {
+              res.calories = parseInt(data[i].energy);
+              res.energy = parseInt(data[i].energy);
+              res.energyUnit = data[i].energyUnit;
+          }
+          if (data[i].distance) {
+              res.distance = parseInt(data[i].distance);
+              res.distanceUnit = data[i].distanceUnit;
+          }
+            if (data[i].swimStrokeCount) {
+                res.swimStrokeCount = parseInt(data[i].swimStrokeCount);
+                res.swimStrokeCountUnit = data[i].swimStrokeCountUnit;
+            }
+            if (data[i].flightsClimbedValue) {
+                res.flightsClimbedValue = parseInt(data[i].flightsClimbedValue);
+                res.flightsClimbedUnit = data[i].flightsClimbedUnit;
+            }
+            
           res.sourceName = data[i].sourceName;
           res.sourceBundleId = data[i].sourceBundleId;
+          res.duration = data[i].duration;
+          res.durationUnit = data[i].durationUnit;
+          res.sourceName = data[i].sourceName;
+          res.sourceBundleId = data[i].sourceBundleId;
+          res.sourceProductType = data[i].sourceProductType;
+          res.sourceOSVersion = '';
+          if (data[i].sourceOSVersionMajor || typeof data[i].sourceOSVersionPatch == 'number') {
+              res.sourceOSVersion += data[i].sourceOSVersionMajor;
+          }
+          if (data[i].sourceOSVersionMinor || typeof data[i].sourceOSVersionPatch == 'number') {
+              res.sourceOSVersion += '.' + data[i].sourceOSVersionMinor;
+            }
+          if (data[i].sourceOSVersionPatch || typeof data[i].sourceOSVersionPatch == 'number') {
+              res.sourceOSVersion += '.' + data[i].sourceOSVersionPatch;
+          }
+          res.deviceName = data[i].deviceName;
+          res.deviceModel = data[i].deviceModel;
+          res.deviceManufacturer = data[i].deviceManufacturer;
+          res.deviceLocalIdentifier = data[i].deviceLocalIdentifier;
+          res.deviceHardwareVersion = data[i].deviceHardwareVersion;
+          res.deviceSoftwareVersion = data[i].deviceSoftwareVersion;
+          res.deviceFirmwareVersion = data[i].deviceFirmwareVersion;
+          res._metadata = data[i].metadata || {};
+            res.workoutEvents = data[i].workoutEvents || [];
           result.push(res);
         }
       }
@@ -386,6 +426,16 @@ Health.prototype.query = function (opts, onSuccess, onError) {
           if (samples[i].sourceOSVersionPatch || typeof samples[i].sourceOSVersionPatch == 'number') {
             res.sourceOSVersion += '.' + samples[i].sourceOSVersionPatch;
           }
+            res.deviceName = samples[i].deviceName;
+            res.deviceModel = samples[i].deviceModel;
+            res.deviceManufacturer = samples[i].deviceManufacturer;
+            res.deviceLocalIdentifier = samples[i].deviceLocalIdentifier;
+            res.deviceHardwareVersion = samples[i].deviceHardwareVersion;
+            res.deviceSoftwareVersion = samples[i].deviceSoftwareVersion;
+            res.deviceFirmwareVersion = samples[i].deviceFirmwareVersion;
+            res._metadata = samples[i].metadata || {};
+
+
           result.push(res);
         }
       };

@@ -792,7 +792,6 @@ static NSString *const HKPluginKeyUUID = @"UUID";
             });
         } else {
 
-
             HKSampleQuery *query = [[HKSampleQuery alloc] initWithSampleType:[HKWorkoutType workoutType] predicate:workoutPredicate limit:HKObjectQueryNoLimit sortDescriptors:nil resultsHandler:^(HKSampleQuery *sampleQuery, NSArray *results, NSError *innerError) {
                 if (innerError) {
                     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -813,28 +812,94 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                             source = workout.source;
                         }
 
-                        // TODO: use a float value, or switch to metric
-                        double miles = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
-                        NSString *milesString = [NSString stringWithFormat:@"%ld", (long) miles];
-
                         // Parse totalEnergyBurned in kilocalories
                         double cals = [workout.totalEnergyBurned doubleValueForUnit:[HKUnit kilocalorieUnit]];
                         NSString *calories = [[NSNumber numberWithDouble:cals] stringValue];
+                        
+                        double totalDistance = [workout.totalDistance doubleValueForUnit:[HKUnit meterUnit]];
+                        NSString *totalDistanceString = [NSString stringWithFormat:@"%f", (double) totalDistance];
+                        
+                        double totalFlightsClimbed = [workout.totalFlightsClimbed doubleValueForUnit:[HKUnit countUnit]];
+                        NSString *totalFlightsClimbedString = [[NSNumber numberWithDouble:totalFlightsClimbed] stringValue];
+                        
+                        double totalSwimmingStrokeCount = [workout.totalSwimmingStrokeCount doubleValueForUnit:[HKUnit countUnit]];
+                        NSString *totalSwimmingStrokeCountString = [[NSNumber numberWithDouble:totalSwimmingStrokeCount] stringValue];
 
                         NSMutableDictionary *entry = [
                                 @{
                                         @"duration": @(workout.duration),
+                                        @"durationUnit": @"seconds",
                                         HKPluginKeyStartDate: [HealthKit stringFromDate:workout.startDate],
                                         HKPluginKeyEndDate: [HealthKit stringFromDate:workout.endDate],
-                                        @"distance": milesString,
+                                        @"distance": totalDistanceString,
+                                        @"distanceUnit": @"meters",
                                         @"energy": calories,
+                                        @"energyUnit": @"kcal",
                                         HKPluginKeySourceBundleId: source.bundleIdentifier,
                                         HKPluginKeySourceName: source.name,
                                         @"activityType": workoutActivity,
-                                        @"UUID": [workout.UUID UUIDString]
+                                        @"UUID": [workout.UUID UUIDString],
+                                        @"swimStrokeCount": totalSwimmingStrokeCountString,
+                                        @"swimStrokeUnit": @"count",
+                                        @"flightsClimbedValue": totalFlightsClimbedString,
+                                        @"flightsClimbedUnit": @"count",
                                 } mutableCopy
                         ];
+                        
+                        
+                        entry[HKPluginKeySourceName] = workout.sourceRevision.source.name;
+                        entry[HKPluginKeySourceBundleId] = workout.sourceRevision.source.bundleIdentifier;
+                        entry[@"sourceProductType"] = workout.sourceRevision.productType;
+                        entry[@"sourceVersion"] = workout.sourceRevision.version;
+                        entry[@"sourceOSVersionMajor"] = [NSNumber numberWithInteger:workout.sourceRevision.operatingSystemVersion.majorVersion];
+                        entry[@"sourceOSVersionMinor"] = [NSNumber numberWithInteger:workout.sourceRevision.operatingSystemVersion.minorVersion];
+                        entry[@"sourceOSVersionPatch"] = [NSNumber numberWithInteger:workout.sourceRevision.operatingSystemVersion.patchVersion];
+                        
+                        entry[@"deviceName"] = workout.device.name;
+                        entry[@"deviceModel"] = workout.device.model;
+                        entry[@"deviceManufacturer"] = workout.device.manufacturer;
+                        entry[@"deviceLocalIdentifier"] = workout.device.localIdentifier;
+                        entry[@"deviceHardwareVersion"] = workout.device.hardwareVersion;
+                        entry[@"deviceSoftwareVersion"] = workout.device.softwareVersion;
+                        entry[@"deviceFirmwareVersion"] = workout.device.firmwareVersion;
+                        
+                        NSMutableDictionary *metadata = [@{} mutableCopy];
+                        if (workout.metadata != nil && [workout.metadata isKindOfClass:[NSDictionary class]]) {
+                            for (id key in workout.metadata) {
+                                if ([NSJSONSerialization isValidJSONObject:[workout.metadata objectForKey:key]]) {
+                                    [metadata setObject:[workout.metadata objectForKey:key] forKey:key];
+                                }
+                            }
+                        }
+                        entry[@"metadata"] = metadata;
 
+
+                        
+                        NSMutableArray *events = [[NSMutableArray alloc] initWithCapacity:workout.workoutEvents.count];
+                        for (HKWorkoutEvent *event in workout.workoutEvents) {
+                            NSString *eventType = [[NSNumber numberWithDouble:event.type] stringValue];
+                            NSString *duration = [[NSNumber numberWithDouble:event.dateInterval.duration] stringValue];
+                            NSString *startDate = [[NSNumber numberWithDouble:[event.dateInterval.startDate timeIntervalSince1970]] stringValue];
+                            NSMutableDictionary *evententry = [@{
+                                @"startDate": startDate,
+                                @"duration": duration,
+                                @"type": eventType,
+                            } mutableCopy];
+
+                            NSMutableDictionary *eventmetadata = [@{} mutableCopy];
+                            if (event.metadata != nil && [event.metadata isKindOfClass:[NSDictionary class]]) {
+                                for (id key in event.metadata) {
+                                    if ([NSJSONSerialization isValidJSONObject:[event.metadata objectForKey:key]]) {
+                                        [eventmetadata setObject:[event.metadata objectForKey:key] forKey:key];
+                                    }
+                                }
+                            }
+                            evententry[@"metadata"] = eventmetadata;
+                            
+                            [events addObject:evententry];
+                        }
+                        entry[@"workoutEvents"] = events;
+                        
                         [finalResults addObject:entry];
                     }
 
@@ -1400,6 +1465,14 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                           entry[@"sourceOSVersionMajor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
                                                                           entry[@"sourceOSVersionMinor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.minorVersion];
                                                                           entry[@"sourceOSVersionPatch"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.patchVersion];
+                                                                          
+                                                                          entry[@"deviceName"] = sample.device.name;
+                                                                          entry[@"deviceModel"] = sample.device.model;
+                                                                          entry[@"deviceManufacturer"] = sample.device.manufacturer;
+                                                                          entry[@"deviceLocalIdentifier"] = sample.device.localIdentifier;
+                                                                          entry[@"deviceHardwareVersion"] = sample.device.hardwareVersion;
+                                                                          entry[@"deviceSoftwareVersion"] = sample.device.softwareVersion;
+                                                                          entry[@"deviceFirmwareVersion"] = sample.device.firmwareVersion;
 
                                                                           if (sample.metadata == nil || ![NSJSONSerialization isValidJSONObject:sample.metadata]) {
                                                                               entry[HKPluginKeyMetadata] = @{};
@@ -1424,7 +1497,9 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
                                                                               HKQuantitySample *qsample = (HKQuantitySample *) sample;
                                                                               [entry setValue:@([qsample.quantity doubleValueForUnit:unit]) forKey:@"quantity"];
-
+                                                                              
+                                                                              NSString *qtype = qsample.quantityType.identifier;
+                                                                              [entry setValue:qtype forKey:@"quantityType"];
                                                                           } else if ([sample isKindOfClass:[HKWorkout class]]) {
 
                                                                               HKWorkout *wsample = (HKWorkout *) sample;
@@ -1833,6 +1908,211 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     }
   }];
 }
+
+// + (NSDictionary*) parseQuantitySample:(HKQuantitySample*)sample {
+//     /* IF A SUPPORTED TYPE, parse. If not, ignore */
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit meterUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit meterUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit meterUnit] unitString];
+        
+//         /* IF BASE MEASURE IS TOO SMALL */
+//         if (value < 0) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixCenti]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
+//             if (value < 0) {
+//                 value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixMilli]];
+//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//                 unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
+//             }
+//         }
+        
+//         if (value > 1000) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixKilo]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
+//         }
+        
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit gramUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit gramUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit gramUnit] unitString];
+        
+//         /* IF BASE MEASURE IS TOO SMALL */
+//         if (value < 0) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixCenti]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
+//             if (value < 0) {
+//                 value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixMilli]];
+//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//                 unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
+//             }
+//         }
+        
+//         if (value > 1000) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixKilo]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
+//         }
+        
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit literUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit literUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit literUnit] unitString];
+        
+//         /* IF BASE MEASURE IS TOO SMALL */
+//         if (value < 0) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixCenti]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
+//             if (value < 0) {
+//                 value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixMilli]];
+//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//                 unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
+//             }
+//         }
+        
+//         if (value > 1000) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixKilo]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
+//         }
+        
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit pascalUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit pascalUnit] unitString];
+        
+//         /* IF BASE MEASURE IS TOO SMALL */
+//         if (value < 0) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixCenti]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
+//             if (value < 0) {
+//                 value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixMilli]];
+//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//                 unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
+//             }
+//         }
+        
+//         if (value > 1000) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixKilo]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
+//         }
+        
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit secondUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit secondUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit secondUnit] unitString];
+        
+//         /* IF BASE MEASURE IS TOO SMALL */
+//         if (value < 0) {
+//             value = [sample.quantity doubleValueForUnit:[HKUnit secondUnitWithMetricPrefix:HKMetricPrefixMilli]];
+//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
+//             unit = [[HKUnit secondUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
+//         }
+        
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit kilocalorieUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit kilocalorieUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit kilocalorieUnit] unitString];
+                
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit degreeCelsiusUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit degreeCelsiusUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit degreeCelsiusUnit] unitString];
+                
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit countUnit]]) {
+//         /* BASE METRIC MEASURE */
+//         double value = [sample.quantity doubleValueForUnit:[HKUnit countUnit]];
+//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
+        
+//         NSString *unit = [[HKUnit countUnit] unitString];
+                
+        
+//         return @{
+//             @"unit": unit,
+//             @"value": finalValue,
+//         };
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit decibelHearingLevelUnit]]) {
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit voltUnit]]) {
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit hertzUnit]]) {
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit siemenUnit]]) {
+        
+//     }
+//     if ([sample.quantity isCompatibleWithUnit:[HKUnit internationalUnit]]) {
+        
+//     }
+// }
 
 @end
 
