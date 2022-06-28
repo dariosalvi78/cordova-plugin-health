@@ -150,4 +150,8 @@
  */
 - (void) deleteSamples:(CDVInvokedUrlCommand*)command;
 
+- (void) queryElectrocardiogramSamples:(CDVInvokedUrlCommand *)command;
+
+- (void) queryAudiogramSamples:(CDVInvokedUrlCommand *)command;
+
 @end

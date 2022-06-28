@@ -85,6 +85,9 @@ define('delete');
 define('readWeight');
 define('readHeight');
 define('readBloodType', {noArgs: true});
+define('queryActivitySummary', {}, hasValidDates);
+define('queryElectrocardiogramSamples', {}, hasValidDates);
+define('queryAudiogramSamples', {}, hasValidDates);
 
 define('saveWeight', function(options) {
   if (options.date == null) options.date = new Date();

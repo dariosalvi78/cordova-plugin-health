@@ -1391,6 +1391,68 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     [[HealthKit sharedHealthStore] executeQuery:query];
 }
 
+
+- (void)queryActivitySummary:(CDVInvokedUrlCommand *)command {
+    NSMutableSet *readDataTypes = [[NSMutableSet alloc] init];
+    [readDataTypes addObject:[HKObjectType activitySummaryType]];
+    [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:readDataTypes completion:^(BOOL success, NSError *error) {
+        __block HealthKit *bSelf = self;
+        if (success) {
+            NSDictionary *args = command.arguments[0];
+            NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
+            NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
+            NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+            HKActivitySummaryQuery *query = [[HKActivitySummaryQuery alloc] initWithPredicate:predicate resultsHandler:^(HKActivitySummaryQuery *sampleQuery, NSArray *results, NSError *innerError) {
+                if (innerError != nil) {
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        [HealthKit triggerErrorCallbackWithMessage:error.localizedDescription command:command delegate:bSelf.commandDelegate];
+                    });
+                } else {
+
+                    NSMutableArray *finalResults = [[NSMutableArray alloc] initWithCapacity:results.count];
+                    
+                    for (HKActivitySummary *sample in results) {
+                        
+                        NSMutableDictionary *entry = [NSMutableDictionary dictionary];
+                        NSDateComponents *startSample = [sample dateComponentsForCalendar:[NSCalendar currentCalendar]];
+                        NSDate *date = startSample.date;
+                        
+                        entry[@"startDate"] = [HealthKit stringFromDate:date];
+                        entry[@"activeEnergy"] = @([sample.activeEnergyBurned doubleValueForUnit:[HKUnit kilocalorieUnit]]);
+                        entry[@"activeEnergyGoal"] = @([sample.activeEnergyBurnedGoal doubleValueForUnit:[HKUnit kilocalorieUnit]]);
+                        
+                        entry[@"appleStandHours"] = @([sample.appleStandHours doubleValueForUnit:[HKUnit countUnit]]);
+                        entry[@"appleStandHoursGoal"] = @([sample.appleStandHoursGoal doubleValueForUnit:[HKUnit countUnit]]);
+                        
+                        entry[@"appleExerciseTime"] = @([sample.appleExerciseTime doubleValueForUnit:[HKUnit minuteUnit]]);
+                        entry[@"appleExerciseTimeGoal"] = @([sample.appleExerciseTimeGoal doubleValueForUnit:[HKUnit minuteUnit]]);
+                        
+                        if (@available(iOS 14.0, watchOS 7.0, *)) {
+                            entry[@"appleMoveTime"] = @([sample.appleMoveTime doubleValueForUnit:[HKUnit minuteUnit]]);
+                            entry[@"appleMoveTimeGoal"] = @([sample.appleMoveTimeGoal doubleValueForUnit:[HKUnit minuteUnit]]);
+                        }
+                        
+                        [finalResults addObject:entry];
+                    }
+                    
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:finalResults];
+                        [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                    });
+                }
+            }];
+            [[HealthKit sharedHealthStore] executeQuery:query];
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.localizedDescription];
+                [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            });
+        }
+    }];
+
+
+}
+
 /**
  * Query a specified sample type
  *
@@ -1404,7 +1466,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     NSString *unitString = args[HKPluginKeyUnit];
     NSUInteger limit = ((args[@"limit"] != nil) ? [args[@"limit"] unsignedIntegerValue] : 1000);
     BOOL ascending = (args[@"ascending"] != nil && [args[@"ascending"] boolValue]);
-
+    
     HKSampleType *type = [HealthKit getHKSampleType:sampleTypeString];
     if (type == nil) {
         [HealthKit triggerErrorCallbackWithMessage:@"sampleType was invalid" command:command delegate:self.commandDelegate];
@@ -1474,11 +1536,16 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                           entry[@"deviceSoftwareVersion"] = sample.device.softwareVersion;
                                                                           entry[@"deviceFirmwareVersion"] = sample.device.firmwareVersion;
 
-                                                                          if (sample.metadata == nil || ![NSJSONSerialization isValidJSONObject:sample.metadata]) {
-                                                                              entry[HKPluginKeyMetadata] = @{};
-                                                                          } else {
-                                                                              entry[HKPluginKeyMetadata] = sample.metadata;
+//                                                                    
+                                                                          NSMutableDictionary *metadata = [@{} mutableCopy];
+                                                                          if (sample.metadata != nil && [sample.metadata isKindOfClass:[NSDictionary class]]) {
+                                                                              for (id key in sample.metadata) {
+                                                                                  if ([NSJSONSerialization isValidJSONObject:[sample.metadata objectForKey:key]]) {
+                                                                                      [metadata setObject:[sample.metadata objectForKey:key] forKey:key];
+                                                                                  }
+                                                                              }
                                                                           }
+                                                                          entry[HKPluginKeyMetadata] = metadata;
 
                                                                           // case-specific indices
                                                                           if ([sample isKindOfClass:[HKCategorySample class]]) {
@@ -1494,12 +1561,25 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                               entry[HKPluginKeyCorrelationType] = correlation.correlationType.identifier;
 
                                                                           } else if ([sample isKindOfClass:[HKQuantitySample class]]) {
+                                                                              if (unit == nil) {
+                                                                                     [HealthKit triggerErrorCallbackWithMessage:@"no unit provided" command:command delegate:self.commandDelegate];
+                                                                                     break;
+                                                                              }
+                                                                              @try {
 
-                                                                              HKQuantitySample *qsample = (HKQuantitySample *) sample;
-                                                                              [entry setValue:@([qsample.quantity doubleValueForUnit:unit]) forKey:@"quantity"];
+                                                                                  HKQuantitySample *qsample = (HKQuantitySample *) sample;
+                                                                                  [entry setValue:@([qsample.quantity doubleValueForUnit:unit]) forKey:@"quantity"];
+                                                                                  
+                                                                                  NSString *qtype = qsample.quantityType.identifier;
+                                                                                  [entry setValue:qtype forKey:@"quantityType"];
+                                                                                  
+                                                                              } @catch (NSException *exception) {
+                                                                                  dispatch_sync(dispatch_get_main_queue(), ^{
+                                                                                      [HealthKit triggerErrorCallbackWithMessage:@"Error: Incompatable unit" command:command delegate:bSelf.commandDelegate];
+                                                                                  });
+                                                                                  break;
+                                                                              }
                                                                               
-                                                                              NSString *qtype = qsample.quantityType.identifier;
-                                                                              [entry setValue:qtype forKey:@"quantityType"];
                                                                           } else if ([sample isKindOfClass:[HKWorkout class]]) {
 
                                                                               HKWorkout *wsample = (HKWorkout *) sample;
@@ -1909,210 +1989,290 @@ static NSString *const HKPluginKeyUUID = @"UUID";
   }];
 }
 
-// + (NSDictionary*) parseQuantitySample:(HKQuantitySample*)sample {
-//     /* IF A SUPPORTED TYPE, parse. If not, ignore */
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit meterUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit meterUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit meterUnit] unitString];
-        
-//         /* IF BASE MEASURE IS TOO SMALL */
-//         if (value < 0) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixCenti]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
-//             if (value < 0) {
-//                 value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixMilli]];
-//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//                 unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
-//             }
-//         }
-        
-//         if (value > 1000) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixKilo]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit meterUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
-//         }
-        
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit gramUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit gramUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit gramUnit] unitString];
-        
-//         /* IF BASE MEASURE IS TOO SMALL */
-//         if (value < 0) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixCenti]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
-//             if (value < 0) {
-//                 value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixMilli]];
-//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//                 unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
-//             }
-//         }
-        
-//         if (value > 1000) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixKilo]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit gramUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
-//         }
-        
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit literUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit literUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit literUnit] unitString];
-        
-//         /* IF BASE MEASURE IS TOO SMALL */
-//         if (value < 0) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixCenti]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
-//             if (value < 0) {
-//                 value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixMilli]];
-//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//                 unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
-//             }
-//         }
-        
-//         if (value > 1000) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit literUnitWithMetricPrefix:HKMetricPrefixKilo]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit literUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
-//         }
-        
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit pascalUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit pascalUnit] unitString];
-        
-//         /* IF BASE MEASURE IS TOO SMALL */
-//         if (value < 0) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixCenti]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixCenti] unitString];
-//             if (value < 0) {
-//                 value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixMilli]];
-//                 finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//                 unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
-//             }
-//         }
-        
-//         if (value > 1000) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixKilo]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit pascalUnitWithMetricPrefix:HKMetricPrefixKilo] unitString];
-//         }
-        
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit secondUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit secondUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit secondUnit] unitString];
-        
-//         /* IF BASE MEASURE IS TOO SMALL */
-//         if (value < 0) {
-//             value = [sample.quantity doubleValueForUnit:[HKUnit secondUnitWithMetricPrefix:HKMetricPrefixMilli]];
-//             finalValue = [NSString stringWithFormat:@"%f", (double) value];
-//             unit = [[HKUnit secondUnitWithMetricPrefix:HKMetricPrefixMilli] unitString];
-//         }
-        
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit kilocalorieUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit kilocalorieUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit kilocalorieUnit] unitString];
-                
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit degreeCelsiusUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit degreeCelsiusUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit degreeCelsiusUnit] unitString];
-                
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit countUnit]]) {
-//         /* BASE METRIC MEASURE */
-//         double value = [sample.quantity doubleValueForUnit:[HKUnit countUnit]];
-//         NSString *finalValue = [NSString stringWithFormat:@"%f", (double) value];
-        
-//         NSString *unit = [[HKUnit countUnit] unitString];
-                
-        
-//         return @{
-//             @"unit": unit,
-//             @"value": finalValue,
-//         };
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit decibelHearingLevelUnit]]) {
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit voltUnit]]) {
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit hertzUnit]]) {
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit siemenUnit]]) {
-        
-//     }
-//     if ([sample.quantity isCompatibleWithUnit:[HKUnit internationalUnit]]) {
-        
-//     }
-// }
+- (void)queryAudiogramSamples:(CDVInvokedUrlCommand *)command
+ {
+     if (@available(iOS 14.0, *)) {
+         NSDictionary *args = command.arguments[0];
+         NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
+         NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
+         NSUInteger limit = ((args[@"limit"] != nil) ? [args[@"limit"] unsignedIntegerValue] : 1000);
+         BOOL ascending = (args[@"ascending"] != nil && [args[@"ascending"] boolValue]);
+         
+         NSPredicate * predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];;
+         NSSortDescriptor *timeSortDescriptor = [[NSSortDescriptor alloc] initWithKey:HKSampleSortIdentifierEndDate ascending:ascending];
+
+         // Define the results handler for the SampleQuery.
+         void (^resultsHandler)(HKSampleQuery *query, NSArray *results, NSError *innerError);
+         resultsHandler = ^(HKSampleQuery *query, NSArray *results, NSError *innerError) {
+             if (innerError != nil) {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     [HealthKit triggerErrorCallbackWithMessage:innerError.localizedDescription command:command delegate:self.commandDelegate];
+                 });
+             }
+
+             // explicity send back an empty array for no results
+             if (results.count == 0) {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:@[]];
+                     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                 });
+                 return;
+             }
+
+             NSMutableArray *data = [NSMutableArray arrayWithCapacity:results.count];
+
+             for (HKAudiogramSample *sample in results) {
+                 NSMutableDictionary *entry = [NSMutableDictionary dictionary];
+                 
+                 [entry setObject:[HealthKit stringFromDate:sample.startDate] forKey:@"startDate"];
+                 [entry setObject:[HealthKit stringFromDate:sample.endDate] forKey:@"endDate"];
+                 NSNumber *osMajor = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
+                 NSNumber *osMinor = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.minorVersion];
+                 NSNumber *osPatch = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.patchVersion];
+
+                 NSMutableArray *sensitivityPoints = [NSMutableArray arrayWithCapacity:sample.sensitivityPoints.count];
+                 for (HKAudiogramSensitivityPoint *sensitivityPoint in sample.sensitivityPoints) {
+                     NSMutableDictionary *sensitivityPointEntry = [NSMutableDictionary dictionary];
+                     
+                     double frequency = [sensitivityPoint.frequency doubleValueForUnit:[HKUnit hertzUnit]];
+                     
+                     [sensitivityPointEntry setValue:[NSString stringWithFormat:@"%f", frequency] forKey:@"frequency"];
+                     [sensitivityPointEntry setValue:@"Hz" forKey:@"frequencyUnit"];
+                     
+                     [sensitivityPointEntry setValue:@([sensitivityPoint.rightEarSensitivity doubleValueForUnit:[HKUnit decibelHearingLevelUnit]]) forKey:@"rightEarSensitivity"];
+                     [sensitivityPointEntry setValue:@([sensitivityPoint.leftEarSensitivity doubleValueForUnit:[HKUnit decibelHearingLevelUnit]]) forKey:@"leftEarSensitivity"];
+                     [sensitivityPointEntry setValue:@"dBHL" forKey:@"sensitivityUnit"];
+
+                     [sensitivityPoints addObject:sensitivityPointEntry];
+                 }
+                 
+                 [entry setObject:sensitivityPoints forKey:@"sensitivityPoints"];
+                 
+                 [entry setObject:sample.sourceRevision.source.name ? sample.sourceRevision.source.name : @"" forKey:@"sourceName"];
+                 [entry setObject:sample.sourceRevision.source.bundleIdentifier ? sample.sourceRevision.source.bundleIdentifier : @"" forKey:@"sourceBundleId"];
+                 [entry setObject:sample.sourceRevision.productType ? sample.sourceRevision.productType : @"" forKey:@"sourceProductType"];
+                 [entry setObject:sample.sourceRevision.version ? sample.sourceRevision.version : @"" forKey:@"sourceVersion"];
+
+                 [entry setObject:osMajor ? osMajor : @"" forKey:@"sourceOSVersionMajor"];
+                 [entry setObject:osMinor ? osMinor : @"" forKey:@"sourceOSVersionMinor"];
+                 [entry setObject:osPatch ? osPatch : @"" forKey:@"sourceOSVersionPatch"];
+                 
+                 [entry setObject:sample.device.name ? sample.device.name : @"" forKey:@"deviceName"];
+                 [entry setObject:sample.device.model ? sample.device.model : @"" forKey:@"deviceModel"];
+                 [entry setObject:sample.device.manufacturer ? sample.device.manufacturer : @"" forKey:@"deviceManufacturer"];
+                 [entry setObject:sample.device.localIdentifier ? sample.device.localIdentifier : @"" forKey:@"deviceLocalIdentifier"];
+                 [entry setObject:sample.device.hardwareVersion ? sample.device.hardwareVersion : @"" forKey:@"deviceHardwareVersion"];
+                 [entry setObject:sample.device.softwareVersion ? sample.device.softwareVersion : @"" forKey:@"deviceSoftwareVersion"];
+                 [entry setObject:sample.device.firmwareVersion ? sample.device.firmwareVersion : @"" forKey:@"deviceFirmwareVersion"];
+
+                 [data addObject:entry];
+             }
+
+             dispatch_sync(dispatch_get_main_queue(), ^{
+                  CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:data];
+                  [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+              });
+         };
+         
+         NSMutableSet *readDataTypes = [[NSMutableSet alloc] init];
+         [readDataTypes addObject:[HKObjectType audiogramSampleType]];
+         [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:readDataTypes completion:^(BOOL success, NSError *error) {
+             __block HealthKit *bSelf = self;
+             if (success) {
+                 HKSampleQuery *query = [[HKSampleQuery alloc] initWithSampleType:HKObjectType.audiogramSampleType
+                                                                           predicate:predicate
+                                                                               limit:limit
+                                                                     sortDescriptors:@[timeSortDescriptor]
+                                                                      resultsHandler:resultsHandler];
+                 [[HealthKit sharedHealthStore] executeQuery:query];
+             } else {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     [HealthKit triggerErrorCallbackWithMessage:@"Permission denied" command:command delegate:bSelf.commandDelegate];
+                 });
+             }
+         }];
+     } else {
+         dispatch_sync(dispatch_get_main_queue(), ^{
+             [HealthKit triggerErrorCallbackWithMessage:@"Audiogram is not available for this iOS version" command:command delegate:self.commandDelegate];
+         });
+     }
+ }
+
+- (void)queryElectrocardiogramSamples:(CDVInvokedUrlCommand *)command
+ {
+     if (@available(iOS 14.0, *)) {
+         NSDictionary *args = command.arguments[0];
+         NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
+         NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
+         NSUInteger limit = ((args[@"limit"] != nil) ? [args[@"limit"] unsignedIntegerValue] : 1000);
+         BOOL ascending = (args[@"ascending"] != nil && [args[@"ascending"] boolValue]);
+         
+         NSPredicate * predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];;
+         NSSortDescriptor *timeSortDescriptor = [[NSSortDescriptor alloc] initWithKey:HKSampleSortIdentifierEndDate ascending:ascending];
+
+         // Define the results handler for the SampleQuery.
+         void (^resultsHandler)(HKSampleQuery *query, NSArray *results, NSError *innerError);
+         resultsHandler = ^(HKSampleQuery *query, NSArray *results, NSError *innerError) {
+             if (innerError != nil) {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     [HealthKit triggerErrorCallbackWithMessage:innerError.localizedDescription command:command delegate:self.commandDelegate];
+                 });
+             }
+
+             // explicity send back an empty array for no results
+             if (results.count == 0) {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:@[]];
+                     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                 });
+                 return;
+             }
+
+             __block NSUInteger samplesProcessed = 0;
+             NSMutableArray *data = [NSMutableArray arrayWithCapacity:1];
+
+             // create a function that check the progress of processing the samples
+             // and executes the callback with the data whan done
+             void (^maybeFinish)(void);
+             maybeFinish =  ^() {
+                 // check to see if we've processed all of the returned samples, and return if so
+                 if (samplesProcessed == results.count) {
+                     dispatch_sync(dispatch_get_main_queue(), ^{
+                         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:data];
+                         [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+                     });
+                 }
+             };
+
+             for (HKElectrocardiogram *sample in results) {
+                 NSDate *startSample = sample.startDate;
+                 NSDate *endSample = sample.endDate;
+
+                 NSString *classification;
+                 switch(sample.classification) {
+                     case(HKElectrocardiogramClassificationNotSet):
+                         classification = @"NotSet";
+                         break;
+                     case(HKElectrocardiogramClassificationSinusRhythm):
+                         classification = @"SinusRhythm";
+                         break;
+                     case(HKElectrocardiogramClassificationAtrialFibrillation):
+                         classification = @"AtrialFibrillation";
+                         break;
+                     case(HKElectrocardiogramClassificationInconclusiveLowHeartRate):
+                         classification = @"InconclusiveLowHeartRate";
+                         break;
+                     case(HKElectrocardiogramClassificationInconclusiveHighHeartRate):
+                         classification = @"InconclusiveHighHeartRate";
+                         break;
+                     case(HKElectrocardiogramClassificationInconclusivePoorReading):
+                         classification = @"InconclusivePoorReading";
+                         break;
+                     case(HKElectrocardiogramClassificationInconclusiveOther):
+                         classification = @"InconclusiveOther";
+                         break;
+                     default:
+                         classification = @"Unrecognized";
+                 }
+                 
+                 HKUnit *count = [HKUnit countUnit];
+                 HKUnit *minute = [HKUnit minuteUnit];
+                 HKUnit *bpmUnit = [count unitDividedByUnit:minute];
+                 double averageHeartRate = [sample.averageHeartRate doubleValueForUnit:bpmUnit];
+                 
+//                 NSMutableDictionary *sourceDeviceInfo = [NSMutableDictionary dictionary];
+//                 sourceDeviceInfo[
+                 
+                 NSNumber *osMajor = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
+                 NSNumber *osMinor = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.minorVersion];
+                 NSNumber *osPatch = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.patchVersion];
+
+                 
+                 NSDictionary *elem = @{
+                      @"id" : [[sample UUID] UUIDString],
+                      @"startDate" : [HealthKit stringFromDate:startSample],
+                      @"endDate" : [HealthKit stringFromDate:endSample],
+                      @"classification": classification,
+                      @"averageHeartRate": @(averageHeartRate),
+                      @"samplingFrequency": @([sample.samplingFrequency doubleValueForUnit:HKUnit.hertzUnit]),
+                      @"algorithmVersion": @([[sample metadata][HKMetadataKeyAppleECGAlgorithmVersion] intValue]),
+                      @"voltageMeasurements": @[],
+                      @"sourceName": sample.sourceRevision.source.name ? sample.sourceRevision.source.name : @"",
+                      @"sourceBundleId": sample.sourceRevision.source.bundleIdentifier ? sample.sourceRevision.source.bundleIdentifier : @"",
+                      @"sourceProductType": sample.sourceRevision.productType ? sample.sourceRevision.productType : @"",
+                      @"sourceVersion": sample.sourceRevision.version ? sample.sourceRevision.version : @"",
+                      @"sourceOSVersionMajor": osMajor ? osMajor : @"",
+                      @"sourceOSVersionMinor": osMinor ? osMinor : @"",
+                      @"sourceOSVersionPatch": osPatch ? osPatch : @"",
+//
+                      @"deviceName": sample.device.name ? sample.device.name : @"",
+                      @"deviceModel": sample.device.model ? sample.device.model : @"",
+                      @"deviceManufacturer": sample.device.manufacturer ? sample.device.manufacturer : @"",
+                      @"deviceLocalIdentifier": sample.device.localIdentifier ? sample.device.localIdentifier : @"",
+                      @"deviceHardwareVersion": sample.device.hardwareVersion ? sample.device.hardwareVersion : @"",
+                      @"deviceSoftwareVersion": sample.device.softwareVersion ? sample.device.softwareVersion : @"",
+                      @"deviceFirmwareVersion": sample.device.firmwareVersion ? sample.device.firmwareVersion : @"",
+                  };
+                 
+                 
+                 NSMutableDictionary *mutableElem = [elem mutableCopy];
+                 [data addObject:mutableElem];
+
+                 // create an array to hold the ecg voltage data which will be fetched asynchronously from healthkit
+                 NSMutableArray *voltageMeasurements = [NSMutableArray arrayWithCapacity:sample.numberOfVoltageMeasurements];
+
+                 // now define the data handler for the HKElectrocardiogramQuery
+                 void (^dataHandler)(HKElectrocardiogramQuery *voltageQuery, HKElectrocardiogramVoltageMeasurement *voltageMeasurement, BOOL done, NSError *error);
+
+                 dataHandler = ^(HKElectrocardiogramQuery *voltageQuery, HKElectrocardiogramVoltageMeasurement *voltageMeasurement, BOOL done, NSError *error) {
+                     if (error == nil) {
+                         // If no error exists for this data point, add the voltage measurement to the array.
+                         // I'm not sure if this technique of error handling is what we want. It could lead
+                         // to holes in the data. The alternative is to not write any of the voltage data to
+                         // the elem dictionary if an error occurs. I think holes are *probably* better?
+                         HKQuantity *voltageQuantity = [voltageMeasurement quantityForLead:HKElectrocardiogramLeadAppleWatchSimilarToLeadI];
+                         NSArray *measurement = @[
+                             @(voltageMeasurement.timeSinceSampleStart),
+                             @([voltageQuantity doubleValueForUnit:HKUnit.voltUnit])
+                         ];
+                         [voltageMeasurements addObject:measurement];
+                     }
+
+                     if (done) {
+                         [mutableElem setObject:voltageMeasurements forKey:@"voltageMeasurements"];
+                         samplesProcessed += 1;
+                         maybeFinish();
+                     }
+                 };
+                 HKElectrocardiogramQuery *voltageQuery = [[HKElectrocardiogramQuery alloc] initWithElectrocardiogram:sample
+                                                                                                        dataHandler:dataHandler];
+                 [[HealthKit sharedHealthStore] executeQuery:voltageQuery];
+             }
+         };
+         
+         NSMutableSet *readDataTypes = [[NSMutableSet alloc] init];
+         [readDataTypes addObject:[HKObjectType electrocardiogramType]];
+         [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:readDataTypes completion:^(BOOL success, NSError *error) {
+             __block HealthKit *bSelf = self;
+             if (success) {
+                 HKSampleQuery *ecgQuery = [[HKSampleQuery alloc] initWithSampleType:HKObjectType.electrocardiogramType
+                                                                           predicate:predicate
+                                                                               limit:limit
+                                                                     sortDescriptors:@[timeSortDescriptor]
+                                                                      resultsHandler:resultsHandler];
+                 [[HealthKit sharedHealthStore] executeQuery:ecgQuery];
+             } else {
+                 dispatch_sync(dispatch_get_main_queue(), ^{
+                     [HealthKit triggerErrorCallbackWithMessage:@"Permission denied" command:command delegate:bSelf.commandDelegate];
+                 });
+             }
+         }];
+     } else {
+         dispatch_sync(dispatch_get_main_queue(), ^{
+             [HealthKit triggerErrorCallbackWithMessage:@"Electrocardiogram is not available for this iOS version" command:command delegate:self.commandDelegate];
+         });
+     }
+ }
 
 @end
 
