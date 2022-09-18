@@ -130,7 +130,7 @@
 
     case HKWorkoutActivityTypeStairClimbing:  return @"stair_climbing";
 
-    case HKWorkoutActivityTypeStepTraining: return @"stair_climbing.machine";
+    case HKWorkoutActivityTypeStepTraining: return @"step_training";
 
     case HKWorkoutActivityTypeStairs:  return @"stairs";
 

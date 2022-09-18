@@ -232,11 +232,12 @@ units['distance.walkingRunning'] = 'm';
 units['distance.wheelchair'] = 'm';
 units['distance'] = 'm';
 units['downhill_snow_sports.distance'] = 'm';
-units['electrodermal_activity'] = 'S';
+units['electrodermal_activity'] = 'mcS';
 units['environmental_audio_exposure'] = 'dBASPL';
 units['fat_percentage'] = '%';
 units['forced_expiratory_volume1'] = 'L';
 units['forced_vital_capacity'] = 'L';
+units['flights_climbed'] = 'count';
 units['headphone_audio_exposure'] = 'dBASPL';
 units['heart_rate_variability_sdnn'] = 'ms';
 units['heart_rate.resting'] = 'count/min';
@@ -287,9 +288,9 @@ units['nutrition.vitamin_c'] = 'mg';
 units['nutrition.vitamin_D'] = 'mcg';
 units['nutrition.vitamin_E'] = 'mg';
 units['nutrition.vitamin_K'] = 'mcg';
-units['nutrition.water'] = 'ml';
+units['nutrition.water'] = 'mL';
 units['nutrition.zinc'] = 'mg';
-units['nutrition'] = ['g', 'ml', 'kcal'];
+units['nutrition'] = ['g', 'mL', 'kcal'];
 units['oxygen_saturation'] = '%';
 units['peak_expiratory_flow_rate'] = 'L/min';
 units['peripheral_perfusion_index'] = 'percent';
@@ -297,14 +298,14 @@ units['resp_rate'] = 'count/min';
 units['six_minute_walk_test_distance'] = 'm';
 units['stair_ascent_speed'] = 'm/s';
 units['stair_descent_speed'] = 'm/s';
-units['stand_time'] = 'min';
+units['stand_time'] = 's';
 units['steps'] = 'count';
 units['swimming.distance'] = 'm';
 units['swimming.stroke_count'] = 'count';
 units['temperature'] = 'degC';
 units['temperature.basal'] = 'degC';
 units['uv_exposure'] = 'count';
-units['vo2max'] = 'ml/(kg*min)';
+units['vo2max'] = 'mL/kg/min';
 units['waist_circumference'] = 'cm';
 units['walking_asymmetry_percentage'] = 'percent';
 units['walking_double_support_percentage'] = 'percent';
@@ -457,7 +458,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 				res.endDate = new Date(data[i].endDate);
 				// filter the results based on the dates
 				if ((res.startDate >= opts.startDate) && (res.endDate <= opts.endDate)) {
-					res.value = data[i].activityType;
+					res.activityName = data[i].activityType || "";
 					res.unit = 'activityType';
 					if (data[i].energy) {
 						res.calories = parseInt(data[i].energy);
@@ -469,21 +470,21 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 						res.distanceUnit = data[i].distanceUnit;
 					}
 					if (data[i].swimStrokeCount) {
-						res.swimStrokeCount = parseInt(data[i].swimStrokeCount);
-						res.swimStrokeCountUnit = data[i].swimStrokeCountUnit;
+						res.swimStrokeValue = parseInt(data[i].swimStrokeValue);
+						res.swimStrokeUnit = data[i].swimStrokeUnit;
 					}
 					if (data[i].flightsClimbedValue) {
 						res.flightsClimbedValue = parseInt(data[i].flightsClimbedValue);
 						res.flightsClimbedUnit = data[i].flightsClimbedUnit;
 					}
 
-					res.sourceName = data[i].sourceName;
-					res.sourceBundleId = data[i].sourceBundleId;
-					res.duration = data[i].duration;
-					res.durationUnit = data[i].durationUnit;
-					res.sourceName = data[i].sourceName;
-					res.sourceBundleId = data[i].sourceBundleId;
-					res.sourceProductType = data[i].sourceProductType;
+					res.sourceName = data[i].sourceName || "";
+					res.sourceBundleId = data[i].sourceBundleId || "";
+					res.duration = data[i].duration || "";
+					res.durationUnit = data[i].durationUnit || "";
+					res.sourceName = data[i].sourceName || "";
+					res.sourceBundleId = data[i].sourceBundleId || "";
+					res.sourceProductType = data[i].sourceProductType || "";
 					res.sourceOSVersion = '';
 					if (data[i].sourceOSVersionMajor || typeof data[i].sourceOSVersionPatch == 'number') {
 						res.sourceOSVersion += data[i].sourceOSVersionMajor;
@@ -494,15 +495,16 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					if (data[i].sourceOSVersionPatch || typeof data[i].sourceOSVersionPatch == 'number') {
 						res.sourceOSVersion += '.' + data[i].sourceOSVersionPatch;
 					}
-					res.deviceName = data[i].deviceName;
-					res.deviceModel = data[i].deviceModel;
-					res.deviceManufacturer = data[i].deviceManufacturer;
-					res.deviceLocalIdentifier = data[i].deviceLocalIdentifier;
-					res.deviceHardwareVersion = data[i].deviceHardwareVersion;
-					res.deviceSoftwareVersion = data[i].deviceSoftwareVersion;
-					res.deviceFirmwareVersion = data[i].deviceFirmwareVersion;
-					res._metadata = data[i].metadata || {};
+					res.deviceName = data[i].deviceName || "";
+					res.deviceModel = data[i].deviceModel || "";
+					res.deviceManufacturer = data[i].deviceManufacturer || "";
+					res.deviceLocalIdentifier = data[i].deviceLocalIdentifier || "";
+					res.deviceHardwareVersion = data[i].deviceHardwareVersion || "";
+					res.deviceSoftwareVersion = data[i].deviceSoftwareVersion || "";
+					res.deviceFirmwareVersion = data[i].deviceFirmwareVersion || "";
+					res.metadata = data[i].metadata || {};
 					res.workoutEvents = data[i].workoutEvents || [];
+					res.deviceFDA_UDI = data[i].UDI || "";
 					result.push(res);
 				}
 			}
@@ -551,12 +553,15 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 		}
 		window.plugins.healthkit.querySampleType(opts, function (data) {
 			var result = [];
+			console.error(data);
 			var convertSamples = function (samples) {
 				for (var i = 0; i < samples.length; i++) {
 					var res = {};
 					res.id = samples[i].UUID;
 					res.startDate = new Date(samples[i].startDate);
 					res.endDate = new Date(samples[i].endDate);
+					res.measureName = (samples[i]["categoryType.identifier"] || samples[i].quantityType || samples[i].correlationType || "");
+
 					if (opts.dataType === 'blood_glucose') {
 						res.value = {
 							glucose: samples[i].quantity
@@ -587,9 +592,9 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					}
 					if (samples[i].unit) res.unit = samples[i].unit;
 					else if (opts.unit) res.unit = opts.unit;
-					res.sourceName = samples[i].sourceName;
-					res.sourceBundleId = samples[i].sourceBundleId;
-					res.sourceProductType = samples[i].sourceProductType;
+					res.sourceName = samples[i].sourceName || "";
+					res.sourceBundleId = samples[i].sourceBundleId || "";
+					res.sourceProductType = samples[i].sourceProductType || "";
 					res.sourceOSVersion = '';
 					if (samples[i].sourceOSVersionMajor || typeof samples[i].sourceOSVersionPatch == 'number') {
 						res.sourceOSVersion += samples[i].sourceOSVersionMajor;
@@ -600,15 +605,15 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					if (samples[i].sourceOSVersionPatch || typeof samples[i].sourceOSVersionPatch == 'number') {
 						res.sourceOSVersion += '.' + samples[i].sourceOSVersionPatch;
 					}
-					res.deviceName = samples[i].deviceName;
-					res.deviceModel = samples[i].deviceModel;
-					res.deviceManufacturer = samples[i].deviceManufacturer;
-					res.deviceLocalIdentifier = samples[i].deviceLocalIdentifier;
-					res.deviceHardwareVersion = samples[i].deviceHardwareVersion;
-					res.deviceSoftwareVersion = samples[i].deviceSoftwareVersion;
-					res.deviceFirmwareVersion = samples[i].deviceFirmwareVersion;
-					res._metadata = samples[i].metadata || {};
-
+					res.deviceName = samples[i].deviceName || "";
+					res.deviceModel = samples[i].deviceModel || "";
+					res.deviceManufacturer = samples[i].deviceManufacturer || "";
+					res.deviceLocalIdentifier = samples[i].deviceLocalIdentifier || "";
+					res.deviceHardwareVersion = samples[i].deviceHardwareVersion || "";
+					res.deviceSoftwareVersion = samples[i].deviceSoftwareVersion || "";
+					res.deviceFirmwareVersion = samples[i].deviceFirmwareVersion || "";
+					res.metadata = samples[i].metadata || {};
+					res.deviceFDA_UDI = samples[i].UDI || "";
 
 					result.push(res);
 				}
@@ -652,7 +657,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 				res.appleStandHours = entry.appleStandHours || null;
 				res.appleStandHoursGoal = entry.appleStandHoursGoal || null;
 
-				res.appleExerciseTimeUnit = 'min';
+				res.appleExerciseTimeUnit = 'sec';
 				res.appleExerciseTime = entry.appleExerciseTime || null;
 				res.appleExerciseTimeGoal = entry.appleExerciseTimeGoal || null;
 
@@ -1013,8 +1018,29 @@ var prepareCorrelation = function (data, dataType) {
 		endDate: new Date(data.endDate),
 		value: {}
 	};
-	if (data.sourceName) res.sourceName = data.sourceName;
-	if (data.sourceBundleId) res.sourceBundleId = data.sourceBundleId;
+	res.sourceName = data.sourceName || "";
+	res.sourceBundleId = data.sourceBundleId || "";
+	res.sourceProductType = data.sourceProductType || "";
+	res.sourceOSVersion = '';
+	if (data.sourceOSVersionMajor || typeof data.sourceOSVersionPatch == 'number') {
+		res.sourceOSVersion += data.sourceOSVersionMajor;
+	}
+	if (data.sourceOSVersionMinor || typeof data.sourceOSVersionPatch == 'number') {
+		res.sourceOSVersion += '.' + data.sourceOSVersionMinor;
+	}
+	if (data.sourceOSVersionPatch || typeof data.sourceOSVersionPatch == 'number') {
+		res.sourceOSVersion += '.' + data.sourceOSVersionPatch;
+	}
+	res.deviceName = data.deviceName || "";
+	res.deviceModel = data.deviceModel || "";
+	res.deviceManufacturer = data.deviceManufacturer || "";
+	res.deviceLocalIdentifier = data.deviceLocalIdentifier || "";
+	res.deviceHardwareVersion = data.deviceHardwareVersion || "";
+	res.deviceSoftwareVersion = data.deviceSoftwareVersion || "";
+	res.deviceFirmwareVersion = data.deviceFirmwareVersion || "";
+	res.metadata = data.metadata || {};
+	res.deviceFDA_UDI = data.UDI || "";
+
 	if (dataType === 'nutrition') {
 		res.unit = 'nutrition';
 		if (data.metadata && data.metadata.HKFoodType) res.value.item = data.metadata.HKFoodType;

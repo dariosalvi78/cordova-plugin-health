@@ -838,8 +838,9 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                         HKPluginKeySourceBundleId: source.bundleIdentifier,
                                         HKPluginKeySourceName: source.name,
                                         @"activityType": workoutActivity,
+                                        @"measureName": HKWorkoutTypeIdentifier,
                                         @"UUID": [workout.UUID UUIDString],
-                                        @"swimStrokeCount": totalSwimmingStrokeCountString,
+                                        @"swimStrokeValue": totalSwimmingStrokeCountString,
                                         @"swimStrokeUnit": @"count",
                                         @"flightsClimbedValue": totalFlightsClimbedString,
                                         @"flightsClimbedUnit": @"count",
@@ -862,6 +863,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                         entry[@"deviceHardwareVersion"] = workout.device.hardwareVersion;
                         entry[@"deviceSoftwareVersion"] = workout.device.softwareVersion;
                         entry[@"deviceFirmwareVersion"] = workout.device.firmwareVersion;
+                        entry[@"FDA_UDI"] = workout.device.UDIDeviceIdentifier;
                         
                         NSMutableDictionary *metadata = [@{} mutableCopy];
                         if (workout.metadata != nil && [workout.metadata isKindOfClass:[NSDictionary class]]) {
@@ -880,8 +882,10 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                             NSString *eventType = [[NSNumber numberWithDouble:event.type] stringValue];
                             NSString *duration = [[NSNumber numberWithDouble:event.dateInterval.duration] stringValue];
                             NSString *startDate = [[NSNumber numberWithDouble:[event.dateInterval.startDate timeIntervalSince1970]] stringValue];
+                            NSString *endDate = [[NSNumber numberWithDouble:[event.dateInterval.endDate timeIntervalSince1970]] stringValue];
                             NSMutableDictionary *evententry = [@{
                                 @"startDate": startDate,
+                                @"endDate": endDate,
                                 @"duration": duration,
                                 @"type": eventType,
                             } mutableCopy];
@@ -1424,8 +1428,8 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                         entry[@"appleStandHours"] = @([sample.appleStandHours doubleValueForUnit:[HKUnit countUnit]]);
                         entry[@"appleStandHoursGoal"] = @([sample.appleStandHoursGoal doubleValueForUnit:[HKUnit countUnit]]);
                         
-                        entry[@"appleExerciseTime"] = @([sample.appleExerciseTime doubleValueForUnit:[HKUnit minuteUnit]]);
-                        entry[@"appleExerciseTimeGoal"] = @([sample.appleExerciseTimeGoal doubleValueForUnit:[HKUnit minuteUnit]]);
+                        entry[@"appleExerciseTime"] = @([sample.appleExerciseTime doubleValueForUnit:[HKUnit secondUnit]]);
+                        entry[@"appleExerciseTimeGoal"] = @([sample.appleExerciseTimeGoal doubleValueForUnit:[HKUnit secondUnit]]);
                         
                         if (@available(iOS 14.0, watchOS 7.0, *)) {
                             entry[@"appleMoveTime"] = @([sample.appleMoveTime doubleValueForUnit:[HKUnit minuteUnit]]);
@@ -1519,9 +1523,9 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                           entry[HKPluginKeyStartDate] =[HealthKit stringFromDate:startSample];
                                                                           entry[HKPluginKeyEndDate] = [HealthKit stringFromDate:endSample];
                                                                           entry[HKPluginKeyUUID] = sample.UUID.UUIDString;
-
                                                                           entry[HKPluginKeySourceName] = sample.sourceRevision.source.name;
                                                                           entry[HKPluginKeySourceBundleId] = sample.sourceRevision.source.bundleIdentifier;
+                                                                          
                                                                           entry[@"sourceProductType"] = sample.sourceRevision.productType;
                                                                           entry[@"sourceVersion"] = sample.sourceRevision.version;
                                                                           entry[@"sourceOSVersionMajor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
@@ -1535,17 +1539,22 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                                                           entry[@"deviceHardwareVersion"] = sample.device.hardwareVersion;
                                                                           entry[@"deviceSoftwareVersion"] = sample.device.softwareVersion;
                                                                           entry[@"deviceFirmwareVersion"] = sample.device.firmwareVersion;
+                                                                          entry[@"UDI"] = sample.device.UDIDeviceIdentifier;
+                                                                          
+                                                                          entry[HKPluginKeyMetadata] = [@{} mutableCopy];
+                                                                          
 
-//                                                                    
-                                                                          NSMutableDictionary *metadata = [@{} mutableCopy];
                                                                           if (sample.metadata != nil && [sample.metadata isKindOfClass:[NSDictionary class]]) {
                                                                               for (id key in sample.metadata) {
-                                                                                  if ([NSJSONSerialization isValidJSONObject:[sample.metadata objectForKey:key]]) {
-                                                                                      [metadata setObject:[sample.metadata objectForKey:key] forKey:key];
+                                                                                  NSMutableDictionary *metadata = [@{} mutableCopy];
+                                                                                  [metadata setObject:[sample.metadata objectForKey:key] forKey:key];
+                                                                                  
+                                                                                  if ([NSJSONSerialization isValidJSONObject:metadata]) {
+                                                                                      [entry[HKPluginKeyMetadata] setObject:[sample.metadata objectForKey:key] forKey:key];
                                                                                   }
+                                                                                  
                                                                               }
                                                                           }
-                                                                          entry[HKPluginKeyMetadata] = metadata;
 
                                                                           // case-specific indices
                                                                           if ([sample isKindOfClass:[HKCategorySample class]]) {
@@ -1803,14 +1812,36 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
                 // common indices
                 entry[HKPluginKeyUUID] = sample.UUID.UUIDString;
-                entry[HKPluginKeySourceName] = sample.source.name;
-                entry[HKPluginKeySourceBundleId] = sample.source.bundleIdentifier;
-                if (sample.metadata == nil || ![NSJSONSerialization isValidJSONObject:sample.metadata]) {
-                    entry[HKPluginKeyMetadata] = @{};
-                } else {
-                    entry[HKPluginKeyMetadata] = sample.metadata;
-                }
+                entry[HKPluginKeySourceName] = sample.sourceRevision.source.name;
+                entry[HKPluginKeySourceBundleId] = sample.sourceRevision.source.bundleIdentifier;
+                
+                entry[@"sourceProductType"] = sample.sourceRevision.productType;
+                entry[@"sourceVersion"] = sample.sourceRevision.version;
+                entry[@"sourceOSVersionMajor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.majorVersion];
+                entry[@"sourceOSVersionMinor"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.minorVersion];
+                entry[@"sourceOSVersionPatch"] = [NSNumber numberWithInteger:sample.sourceRevision.operatingSystemVersion.patchVersion];
+                
+                entry[@"deviceName"] = sample.device.name;
+                entry[@"deviceModel"] = sample.device.model;
+                entry[@"deviceManufacturer"] = sample.device.manufacturer;
+                entry[@"deviceLocalIdentifier"] = sample.device.localIdentifier;
+                entry[@"deviceHardwareVersion"] = sample.device.hardwareVersion;
+                entry[@"deviceSoftwareVersion"] = sample.device.softwareVersion;
+                entry[@"deviceFirmwareVersion"] = sample.device.firmwareVersion;
+                entry[@"UDI"] = sample.device.UDIDeviceIdentifier;
+                entry[HKPluginKeyMetadata] = [@{} mutableCopy];
 
+                if (sample.metadata != nil && [sample.metadata isKindOfClass:[NSDictionary class]]) {
+                    for (id key in sample.metadata) {
+                        NSMutableDictionary *metadata = [@{} mutableCopy];
+                        [metadata setObject:[sample.metadata objectForKey:key] forKey:key];
+                        
+                        if ([NSJSONSerialization isValidJSONObject:metadata]) {
+                            [entry[HKPluginKeyMetadata] setObject:[sample.metadata objectForKey:key] forKey:key];
+                        }
+                        
+                    }
+                }
 
                 if ([sample isKindOfClass:[HKCategorySample class]]) {
 
