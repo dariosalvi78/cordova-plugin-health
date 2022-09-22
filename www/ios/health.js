@@ -459,6 +459,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 				// filter the results based on the dates
 				if ((res.startDate >= opts.startDate) && (res.endDate <= opts.endDate)) {
 					res.activityName = data[i].activityType || "";
+					res.measureName = "HKWorkoutTypeIdentifier";
 					res.unit = 'activityType';
 					if (data[i].energy) {
 						res.calories = parseInt(data[i].energy);
@@ -469,7 +470,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 						res.distance = parseInt(data[i].distance);
 						res.distanceUnit = data[i].distanceUnit;
 					}
-					if (data[i].swimStrokeCount) {
+					if (data[i].swimStrokeValue) {
 						res.swimStrokeValue = parseInt(data[i].swimStrokeValue);
 						res.swimStrokeUnit = data[i].swimStrokeUnit;
 					}
@@ -479,6 +480,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					}
 
 					res.sourceName = data[i].sourceName || "";
+					res.sourceVersion = data[i].sourceVersion || "";
 					res.sourceBundleId = data[i].sourceBundleId || "";
 					res.duration = data[i].duration || "";
 					res.durationUnit = data[i].durationUnit || "";
@@ -593,6 +595,7 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					if (samples[i].unit) res.unit = samples[i].unit;
 					else if (opts.unit) res.unit = opts.unit;
 					res.sourceName = samples[i].sourceName || "";
+					res.sourceVersion = samples[i].sourceVersion || "";
 					res.sourceBundleId = samples[i].sourceBundleId || "";
 					res.sourceProductType = samples[i].sourceProductType || "";
 					res.sourceOSVersion = '';
