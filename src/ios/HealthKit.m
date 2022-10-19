@@ -864,18 +864,18 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                         entry[@"deviceSoftwareVersion"] = workout.device.softwareVersion;
                         entry[@"deviceFirmwareVersion"] = workout.device.firmwareVersion;
                         entry[@"FDA_UDI"] = workout.device.UDIDeviceIdentifier;
+                        entry[HKPluginKeyMetadata] = [@{} mutableCopy];
                         
-                        NSMutableDictionary *metadata = [@{} mutableCopy];
                         if (workout.metadata != nil && [workout.metadata isKindOfClass:[NSDictionary class]]) {
                             for (id key in workout.metadata) {
-                                if ([NSJSONSerialization isValidJSONObject:[workout.metadata objectForKey:key]]) {
-                                    [metadata setObject:[workout.metadata objectForKey:key] forKey:key];
+                                NSMutableDictionary *metadata = [@{} mutableCopy];
+                                [metadata setObject:[workout.metadata objectForKey:key] forKey:key];
+                                
+                                if ([NSJSONSerialization isValidJSONObject:metadata]) {
+                                    [entry[HKPluginKeyMetadata] setObject:[workout.metadata objectForKey:key] forKey:key];
                                 }
                             }
                         }
-                        entry[@"metadata"] = metadata;
-
-
                         
                         NSMutableArray *events = [[NSMutableArray alloc] initWithCapacity:workout.workoutEvents.count];
                         for (HKWorkoutEvent *event in workout.workoutEvents) {
@@ -889,16 +889,18 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                 @"duration": duration,
                                 @"type": eventType,
                             } mutableCopy];
+                            evententry[HKPluginKeyMetadata] = [@{} mutableCopy];
 
-                            NSMutableDictionary *eventmetadata = [@{} mutableCopy];
                             if (event.metadata != nil && [event.metadata isKindOfClass:[NSDictionary class]]) {
                                 for (id key in event.metadata) {
-                                    if ([NSJSONSerialization isValidJSONObject:[event.metadata objectForKey:key]]) {
-                                        [eventmetadata setObject:[event.metadata objectForKey:key] forKey:key];
+                                    NSMutableDictionary *eventmetadata = [@{} mutableCopy];
+                                    [eventmetadata setObject:[event.metadata objectForKey:key] forKey:key];
+                                    
+                                    if ([NSJSONSerialization isValidJSONObject:eventmetadata]) {
+                                        [evententry[HKPluginKeyMetadata] setObject:[event.metadata objectForKey:key] forKey:key];
                                     }
                                 }
                             }
-                            evententry[@"metadata"] = eventmetadata;
                             
                             [events addObject:evententry];
                         }
