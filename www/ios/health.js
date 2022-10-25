@@ -1025,6 +1025,8 @@ var prepareCorrelation = function (data, dataType) {
 	res.sourceBundleId = data.sourceBundleId || "";
 	res.sourceProductType = data.sourceProductType || "";
 	res.sourceOSVersion = '';
+	res.sourceVersion = data.sourceVersion || "";
+	res.measureName = (data["categoryType.identifier"] || data.quantityType || data.correlationType || "");
 	if (data.sourceOSVersionMajor || typeof data.sourceOSVersionPatch == 'number') {
 		res.sourceOSVersion += data.sourceOSVersionMajor;
 	}
