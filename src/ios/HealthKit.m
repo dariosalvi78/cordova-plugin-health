@@ -873,6 +873,49 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                 
                                 if ([NSJSONSerialization isValidJSONObject:metadata]) {
                                     [entry[HKPluginKeyMetadata] setObject:[workout.metadata objectForKey:key] forKey:key];
+                                } else {
+                                    if ([key isEqual: HKMetadataKeyWeatherTemperature]) {
+                                        double temperatureCelsius = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit degreeCelsiusUnit]];
+                                        NSString *temperatureCelsiusString = [[NSNumber numberWithDouble:temperatureCelsius] stringValue];
+                                        [entry[HKPluginKeyMetadata] setObject:temperatureCelsiusString forKey:@"HKWeatherTemperatureCelsius"];
+                                        
+                                        double temperatureFahrenheit = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit degreeFahrenheitUnit]];
+                                        NSString *temperatureFahrenheitString = [[NSNumber numberWithDouble:temperatureFahrenheit] stringValue];
+                                        [entry[HKPluginKeyMetadata] setObject:temperatureFahrenheitString forKey:@"HKWeatherTemperatureFahrenheit"];
+                                        
+                                        double temperature = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit degreeCelsiusUnit]];
+                                        NSString *temperatureString = [[NSNumber numberWithDouble:temperature] stringValue];
+                                        [entry[HKPluginKeyMetadata] setObject:temperatureString forKey:@"HKWeatherTemperature"];
+                                        [entry[HKPluginKeyMetadata] setObject:[[HKUnit degreeCelsiusUnit] unitString] forKey:@"HKWeatherTemperatureUnit"];
+                                    }
+                                    if ([key isEqual: HKMetadataKeyWeatherHumidity]) {
+                                        double humidity = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit percentUnit]];
+                                        NSString *humidityString = [[NSNumber numberWithDouble:humidity] stringValue];
+                                        [entry[HKPluginKeyMetadata] setObject:humidityString forKey:HKMetadataKeyWeatherHumidity];
+                                        [entry[HKPluginKeyMetadata] setObject:[[HKUnit percentUnit] unitString] forKey:@"HKWeatherHumidityUnit"];
+                                    }
+                                    if (@available(iOS 11.2, *)) {
+                                        if ([key isEqual: HKMetadataKeyElevationAscended]) {
+                                            double ascended = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit meterUnit]];
+                                            NSString *ascendedString = [[NSNumber numberWithDouble:ascended] stringValue];
+                                            [entry[HKPluginKeyMetadata] setObject:ascendedString forKey:HKMetadataKeyElevationAscended];
+                                            [entry[HKPluginKeyMetadata] setObject:[[HKUnit meterUnit] unitString] forKey:@"HKElevationAscendedUnit"];
+                                        }
+                                        if ([key isEqual: HKMetadataKeyElevationDescended]) {
+                                            double descended = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit meterUnit]];
+                                            NSString *descendedString = [[NSNumber numberWithDouble:descended] stringValue];
+                                            [entry[HKPluginKeyMetadata] setObject:descendedString forKey:HKMetadataKeyElevationDescended];
+                                            [entry[HKPluginKeyMetadata] setObject:[[HKUnit meterUnit] unitString] forKey:@"HKElevationDescendedUnit"];
+                                        }
+                                    }
+                                    if (@available(iOS 13.0, *)) {
+                                        if ([key isEqual: HKMetadataKeyAverageMETs]) {
+                                            double mets = [[workout.metadata objectForKey:key] doubleValueForUnit: [HKUnit unitFromString:@"kcal/(kg*hr)"]];
+                                            NSString *metsString = [[NSNumber numberWithDouble:mets] stringValue];
+                                            [entry[HKPluginKeyMetadata] setObject:metsString forKey:HKMetadataKeyAverageMETs];
+                                            [entry[HKPluginKeyMetadata] setObject:[[HKUnit unitFromString:@"kcal/(kg*hr)"] unitString] forKey:@"HKAverageMETsUnit"];
+                                        }
+                                    }
                                 }
                             }
                         }
