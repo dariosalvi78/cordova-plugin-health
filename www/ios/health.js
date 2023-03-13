@@ -202,6 +202,8 @@ dataTypes['uv_exposure'] = 'HKQuantityTypeIdentifierUVExposure';
 //////////////////////////////// SLEEP //////////////////////////////////
 dataTypes['night_sweats'] = 'HKCategoryTypeIdentifierNightSweats';
 dataTypes['sleep_changes'] = 'HKCategoryTypeIdentifierSleepChanges';
+dataTypes['sleeping_wrist_temp'] = 'HKQuantityTypeIdentifierAppleSleepingWristTemperature';
+
 
 /////////////////////////////// URINARY /////////////////////////////////
 dataTypes['bladder_incontinence'] = 'HKCategoryTypeIdentifierBladderIncontinence';
@@ -296,6 +298,7 @@ units['peak_expiratory_flow_rate'] = 'L/min';
 units['peripheral_perfusion_index'] = 'percent';
 units['resp_rate'] = 'count/min';
 units['six_minute_walk_test_distance'] = 'm';
+units['sleeping_wrist_temp'] = 'degC';
 units['stair_ascent_speed'] = 'm/s';
 units['stair_descent_speed'] = 'm/s';
 units['stand_time'] = 's';
@@ -584,6 +587,17 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 							else res.value.reason = 'bolus';
 						}
 						if (samples[i].metadata && samples[i].metadata.HKMetadataKeyInsulinDeliveryReason) res.value.reason = samples[i].metadata.HKMetadataKeyInsulinDeliveryReason; // overwrite HKInsulinDeliveryReason
+					} else if (opts.dataType === 'ovulation_test_result') {
+						const resultTypes = {
+							1: { key: 1, value: 'negative' },
+							2: { key: 4, value: 'luteinizing_hormone_surge' },
+							3: { key: 0, value: 'indeterminate' },
+							4: { key: 3, value: 'estrogen_surge' },
+						};
+						if (typeof samples[i].value === 'number') {
+							res.value = resultTypes[samples[i].value].key;
+							res.testResult = resultTypes[samples[i].value].value;
+						}
 					} else {
 						if (['string', 'number'].indexOf(typeof samples[i].quantity) > -1) {
 							res.value = samples[i].quantity;
