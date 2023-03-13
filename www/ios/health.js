@@ -1,323 +1,9 @@
 var exec = require('cordova/exec');
-
+const { dataTypes, units, mutable } = require('./constants');
+	
 var Health = function () {
 	this.name = 'health';
 };
-
-var dataTypes = [];
-var units = [];
-
-///////////////////////////////// ACTIVITY //////////////////////////////
-dataTypes['activity'] = 'HKWorkoutTypeIdentifier'; // and HKCategoryTypeIdentifierSleepAnalysis
-dataTypes['appleExerciseTime'] = 'HKQuantityTypeIdentifierAppleExerciseTime';
-dataTypes['calories.active'] = 'HKQuantityTypeIdentifierActiveEnergyBurned';
-dataTypes['calories.basal'] = 'HKQuantityTypeIdentifierBasalEnergyBurned';
-dataTypes['calories'] = 'HKQuantityTypeIdentifierActiveEnergyBurned'; // and HKQuantityTypeIdentifierBasalEnergyBurned
-dataTypes['distance.cycling'] = 'HKQuantityTypeIdentifierDistanceCycling';
-dataTypes['distance.walkingRunning'] = 'HKQuantityTypeIdentifierDistanceWalkingRunning';
-dataTypes['distance.wheelchair'] = 'HKQuantityTypeIdentifierDistanceWheelchair';
-dataTypes['distance'] = 'HKQuantityTypeIdentifierDistanceWalkingRunning'; // and HKQuantityTypeIdentifierDistanceCycling
-dataTypes['downhill_snow_sports.distance'] = 'HKQuantityTypeIdentifierDistanceDownhillSnowSports';
-dataTypes['flights_climbed'] = 'HKQuantityTypeIdentifierFlightsClimbed';
-dataTypes['mindfulness'] = 'HKCategoryTypeIdentifierMindfulSession';
-dataTypes['nike_fuel'] = 'HKQuantityTypeIdentifierNikeFuel';
-dataTypes['sleep'] = 'HKCategoryTypeIdentifierSleepAnalysis';
-dataTypes['stairs'] = 'HKQuantityTypeIdentifierFlightsClimbed';
-dataTypes['stand_time'] = 'HKQuantityTypeIdentifierAppleStandTime';
-dataTypes['steps'] = 'HKQuantityTypeIdentifierStepCount';
-dataTypes['swimming.distance'] = 'HKQuantityTypeIdentifierDistanceSwimming';
-dataTypes['swimming.stroke_count'] = 'HKQuantityTypeIdentifierSwimmingStrokeCount';
-dataTypes['wheelchair.push_count'] = 'HKQuantityTypeIdentifierPushCount';
-dataTypes['workouts'] = 'HKWorkoutTypeIdentifier';
-
-/////////////////////////////// COMPOSITION /////////////////////////////
-dataTypes['bmi'] = 'HKQuantityTypeIdentifierBodyMassIndex';
-dataTypes['fat_percentage'] = 'HKQuantityTypeIdentifierBodyFatPercentage';
-dataTypes['height'] = 'HKQuantityTypeIdentifierHeight';
-dataTypes['lean_body_mass'] = 'HKQuantityTypeIdentifierLeanBodyMass';
-dataTypes['waist_circumference'] = 'HKQuantityTypeIdentifierWaistCircumference';
-dataTypes['weight'] = 'HKQuantityTypeIdentifierBodyMass';
-
-///////////////////////////////// VITALS ////////////////////////////////
-dataTypes['blood_glucose'] = 'HKQuantityTypeIdentifierBloodGlucose';
-dataTypes['blood_pressure_diastolic'] = 'HKQuantityTypeIdentifierBloodPressureDiastolic';
-dataTypes['blood_pressure_systolic'] = 'HKQuantityTypeIdentifierBloodPressureSystolic';
-dataTypes['blood_pressure'] = 'HKCorrelationTypeIdentifierBloodPressure'; // when requesting auth it's HKQuantityTypeIdentifierBloodPressureSystolic and HKQuantityTypeIdentifierBloodPressureDiastolic
-dataTypes['heart_rate.resting'] = 'HKQuantityTypeIdentifierRestingHeartRate';
-dataTypes['heart_rate.variability'] = 'HKQuantityTypeIdentifierHeartRateVariabilitySDNN';
-dataTypes['heart_rate'] = 'HKQuantityTypeIdentifierHeartRate';
-dataTypes['insulin'] = 'HKQuantityTypeIdentifierInsulinDelivery';
-dataTypes['oxygen_saturation'] = 'HKQuantityTypeIdentifierOxygenSaturation';
-dataTypes['resp_rate'] = 'HKQuantityTypeIdentifierRespiratoryRate';
-dataTypes['temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
-dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
-
-/////////////////////////////// NUTRITION ///////////////////////////////
-dataTypes['nutrition.biotin'] = 'HKQuantityTypeIdentifierDietaryBiotin';
-dataTypes['nutrition.caffeine'] = 'HKQuantityTypeIdentifierDietaryCaffeine';
-dataTypes['nutrition.calcium'] = 'HKQuantityTypeIdentifierDietaryCalcium';
-dataTypes['nutrition.calories'] = 'HKQuantityTypeIdentifierDietaryEnergyConsumed';
-dataTypes['nutrition.carbs.total'] = 'HKQuantityTypeIdentifierDietaryCarbohydrates';
-dataTypes['nutrition.chloride'] = 'HKQuantityTypeIdentifierDietaryChloride';
-dataTypes['nutrition.cholesterol'] = 'HKQuantityTypeIdentifierDietaryCholesterol';
-dataTypes['nutrition.chromium'] = 'HKQuantityTypeIdentifierDietaryChromium';
-dataTypes['nutrition.copper'] = 'HKQuantityTypeIdentifierDietaryCopper';
-dataTypes['nutrition.dietary_fiber'] = 'HKQuantityTypeIdentifierDietaryFiber';
-dataTypes['nutrition.fat.monounsaturated'] = 'HKQuantityTypeIdentifierDietaryFatMonounsaturated';
-dataTypes['nutrition.fat.polyunsaturated'] = 'HKQuantityTypeIdentifierDietaryFatPolyunsaturated';
-dataTypes['nutrition.fat.saturated'] = 'HKQuantityTypeIdentifierDietaryFatSaturated';
-dataTypes['nutrition.fat.total'] = 'HKQuantityTypeIdentifierDietaryFatTotal';
-dataTypes['nutrition.folate'] = 'HKQuantityTypeIdentifierDietaryFolate';
-dataTypes['nutrition.iodine'] = 'HKQuantityTypeIdentifierDietaryIodine';
-dataTypes['nutrition.iron'] = 'HKQuantityTypeIdentifierDietaryIron';
-dataTypes['nutrition.magnesium'] = 'HKQuantityTypeIdentifierDietaryMagnesium';
-dataTypes['nutrition.manganese'] = 'HKQuantityTypeIdentifierDietaryManganese';
-dataTypes['nutrition.molybdenum'] = 'HKQuantityTypeIdentifierDietaryMolybdenum';
-dataTypes['nutrition.niacin'] = 'HKQuantityTypeIdentifierDietaryNiacin';
-dataTypes['nutrition.pantothenic_acid'] = 'HKQuantityTypeIdentifierDietaryPantothenicAcid';
-dataTypes['nutrition.phosphorus'] = 'HKQuantityTypeIdentifierDietaryPhosphorus';
-dataTypes['nutrition.potassium'] = 'HKQuantityTypeIdentifierDietaryPotassium';
-dataTypes['nutrition.protein'] = 'HKQuantityTypeIdentifierDietaryProtein';
-dataTypes['nutrition.riboflavin'] = 'HKQuantityTypeIdentifierDietaryRiboflavin';
-dataTypes['nutrition.selenium'] = 'HKQuantityTypeIdentifierDietarySelenium';
-dataTypes['nutrition.sodium'] = 'HKQuantityTypeIdentifierDietarySodium';
-dataTypes['nutrition.sugar'] = 'HKQuantityTypeIdentifierDietarySugar';
-dataTypes['nutrition.thiamin'] = 'HKQuantityTypeIdentifierDietaryThiamin';
-dataTypes['nutrition.vitamin_a'] = 'HKQuantityTypeIdentifierDietaryVitaminA';
-dataTypes['nutrition.vitamin_B12'] = 'HKQuantityTypeIdentifierDietaryVitaminB12';
-dataTypes['nutrition.vitamin_B6'] = 'HKQuantityTypeIdentifierDietaryVitaminB6';
-dataTypes['nutrition.vitamin_c'] = 'HKQuantityTypeIdentifierDietaryVitaminC';
-dataTypes['nutrition.vitamin_D'] = 'HKQuantityTypeIdentifierDietaryVitaminD';
-dataTypes['nutrition.vitamin_E'] = 'HKQuantityTypeIdentifierDietaryVitaminE';
-dataTypes['nutrition.vitamin_K'] = 'HKQuantityTypeIdentifierDietaryVitaminK';
-dataTypes['nutrition.water'] = 'HKQuantityTypeIdentifierDietaryWater';
-dataTypes['nutrition.zinc'] = 'HKQuantityTypeIdentifierDietaryZinc';
-dataTypes['nutrition'] = 'HKCorrelationTypeIdentifierFood';
-
-
-
-
-
-
-
-///////////////////////// ABDOMINAL AND GASTRO //////////////////////////
-dataTypes['abdominal_cramps'] = 'HKCategoryTypeIdentifierAbdominalCramps';
-dataTypes['bloating'] = 'HKCategoryTypeIdentifierBloating';
-dataTypes['constipation'] = 'HKCategoryTypeIdentifierConstipation';
-dataTypes['diarrhea'] = 'HKCategoryTypeIdentifierDiarrhea';
-dataTypes['heartburn'] = 'HKCategoryTypeIdentifierHeartburn';
-dataTypes['nausea'] = 'HKCategoryTypeIdentifierNausea';
-dataTypes['vomiting'] = 'HKCategoryTypeIdentifierVomiting';
-
-//////////////////////////////// ALCOHOL ////////////////////////////////
-dataTypes['blood_alcohol_content'] = 'HKQuantityTypeIdentifierBloodAlcoholContent';
-dataTypes['number_of_alcoholic_beverages'] = 'HKQuantityTypeIdentifierNumberOfAlcoholicBeverages';
-
-//////////////////////////// CONSTITUTIONAL /////////////////////////////
-dataTypes['appetite_changes'] = 'HKCategoryTypeIdentifierAppetiteChanges';
-dataTypes['body_ache'] = 'HKCategoryTypeIdentifierGeneralizedBodyAche';
-dataTypes['chills'] = 'HKCategoryTypeIdentifierChills';
-dataTypes['dizziness'] = 'HKCategoryTypeIdentifierDizziness';
-dataTypes['fainting'] = 'HKCategoryTypeIdentifierFainting';
-dataTypes['fatigue'] = 'HKCategoryTypeIdentifierFatigue';
-dataTypes['fever'] = 'HKCategoryTypeIdentifierFever';
-dataTypes['hot_flashes'] = 'HKCategoryTypeIdentifierHotFlashes';
-
-//////////////////////////// HEART AND LUNG /////////////////////////////
-dataTypes['coughing'] = 'HKCategoryTypeIdentifierCoughing';
-dataTypes['rapid_or_fluttering_heartbeat'] = 'HKCategoryTypeIdentifierRapidPoundingOrFlutteringHeartbeat';
-dataTypes['shortness_of_breath'] = 'HKCategoryTypeIdentifierShortnessOfBreath';
-dataTypes['skipped_heartbeat'] = 'HKCategoryTypeIdentifierSkippedHeartbeat';
-dataTypes['tightness_or_pain'] = 'HKCategoryTypeIdentifierChestTightnessOrPain';
-dataTypes['wheezing'] = 'HKCategoryTypeIdentifierWheezing';
-
-/////////////////////////////// HEARING /////////////////////////////////
-dataTypes['audio_exposure_event'] = 'HKCategoryTypeIdentifierAudioExposureEvent';
-dataTypes['environmental_audio_exposure_event'] = 'HKCategoryTypeIdentifierEnvironmentalAudioExposureEvent';
-dataTypes['environmental_audio_exposure'] = 'HKQuantityTypeIdentifierEnvironmentalAudioExposure'; // iOS 13+
-dataTypes['headphone_audio_exposure_event'] = 'HKCategoryTypeIdentifierHeadphoneAudioExposureEvent';
-dataTypes['headphone_audio_exposure'] = 'HKQuantityTypeIdentifierHeadphoneAudioExposure';
-
-//////////////////////////// LAB AND TESTS //////////////////////////////
-dataTypes['electrodermal_activity'] = 'HKQuantityTypeIdentifierElectrodermalActivity';
-dataTypes['forced_expiratory_volume1'] = 'HKQuantityTypeIdentifierForcedExpiratoryVolume1';
-dataTypes['forced_vital_capacity'] = 'HKQuantityTypeIdentifierForcedVitalCapacity';
-dataTypes['inhaler_usage'] = 'HKQuantityTypeIdentifierInhalerUsage';
-dataTypes['number_of_times_fallen'] = 'HKQuantityTypeIdentifierNumberOfTimesFallen';
-dataTypes['peak_expiratory_flow_rate'] = 'HKQuantityTypeIdentifierPeakExpiratoryFlowRate';
-dataTypes['peripheral_perfusion_index'] = 'HKQuantityTypeIdentifierPeripheralPerfusionIndex';
-
-////////////////////////////// MOBILITY /////////////////////////////////
-dataTypes['six_minute_walk_test_distance'] = 'HKQuantityTypeIdentifierSixMinuteWalkTestDistance';
-dataTypes['stair_ascent_speed'] = 'HKQuantityTypeIdentifierStairAscentSpeed';
-dataTypes['stair_descent_speed'] = 'HKQuantityTypeIdentifierStairDescentSpeed';
-dataTypes['walking_asymmetry_percentage'] = 'HKQuantityTypeIdentifierWalkingAsymmetryPercentage';
-dataTypes['walking_double_support_percentage'] = 'HKQuantityTypeIdentifierWalkingDoubleSupportPercentage';
-dataTypes['walking_speed'] = 'HKQuantityTypeIdentifierWalkingSpeed';
-dataTypes['walking_steadiness_event'] = 'HKCategoryTypeIdentifierAppleWalkingSteadinessEvent';
-dataTypes['walking_steadiness'] = 'HKQuantityTypeIdentifierAppleWalkingSteadiness';
-dataTypes['walking_step_length'] = 'HKQuantityTypeIdentifierWalkingStepLength';
-
-/////////////////////////// MUSCULOSKELETAL /////////////////////////////
-dataTypes['lower_back_pain'] = 'HKCategoryTypeIdentifierLowerBackPain';
-
-//////////////////////////// NEUROLOGICAL ///////////////////////////////
-dataTypes['headache'] = 'HKCategoryTypeIdentifierHeadache';
-dataTypes['memory_lapse'] = 'HKCategoryTypeIdentifierMemoryLapse';
-dataTypes['mood_changes'] = 'HKCategoryTypeIdentifierMoodChanges';
-
-///////////////////////// UPPER RESPIRATORY /////////////////////////////
-dataTypes['loss_of_smell'] = 'HKCategoryTypeIdentifierLossOfSmell';
-dataTypes['loss_of_taste'] = 'HKCategoryTypeIdentifierLossOfTaste';
-dataTypes['runny_nose'] = 'HKCategoryTypeIdentifierRunnyNose';
-dataTypes['sinus_congestion'] = 'HKCategoryTypeIdentifierSinusCongestion';
-dataTypes['sore_throat'] = 'HKCategoryTypeIdentifierSoreThroat';
-
-//////////////////////////// REPRODUCTION ///////////////////////////////
-dataTypes['breast_pain'] = 'HKCategoryTypeIdentifierBreastPain';
-dataTypes['cervical_mucus_quality'] = 'HKCategoryTypeIdentifierCervicalMucusQuality';
-dataTypes['contraceptives'] = 'HKCategoryTypeIdentifierContraceptive';
-dataTypes['intermenstrual_bleeding'] = 'HKCategoryTypeIdentifierIntermenstrualBleeding';
-dataTypes['lactation'] = 'HKCategoryTypeIdentifierLactation';
-dataTypes['menstrual_flow'] = 'HKCategoryTypeIdentifierMenstrualFlow';
-dataTypes['ovulation_test_result'] = 'HKCategoryTypeIdentifierOvulationTestResult';
-dataTypes['pelvic_pain'] = 'HKCategoryTypeIdentifierPelvicPain';
-dataTypes['pregnancy_test_result'] = 'HKCategoryTypeIdentifierPregnancyTestResult';
-dataTypes['pregnancy'] = 'HKCategoryTypeIdentifierPregnancy';
-dataTypes['progesterone_test_result'] = 'HKCategoryTypeIdentifierProgesteroneTestResult';
-dataTypes['sexual_activity'] = 'HKCategoryTypeIdentifierSexualActivity';
-dataTypes['temperature.basal'] = 'HKQuantityTypeIdentifierBasalBodyTemperature';
-dataTypes['vaginal_dryness'] = 'HKCategoryTypeIdentifierVaginalDryness';
-
-////////////////////////////// SELF CARE ////////////////////////////////
-dataTypes['handwashing_event'] = 'HKCategoryTypeIdentifierHandwashingEvent';
-dataTypes['toothbrushing_event'] = 'HKCategoryTypeIdentifierToothbrushingEvent';
-
-//////////////////////////// SKIN AND HAIR //////////////////////////////
-dataTypes['acne'] = 'HKCategoryTypeIdentifierAcne';
-dataTypes['dry_skin'] = 'HKCategoryTypeIdentifierDrySkin';
-dataTypes['hair_loss'] = 'HKCategoryTypeIdentifierHairLoss';
-dataTypes['uv_exposure'] = 'HKQuantityTypeIdentifierUVExposure';
-
-//////////////////////////////// SLEEP //////////////////////////////////
-dataTypes['night_sweats'] = 'HKCategoryTypeIdentifierNightSweats';
-dataTypes['sleep_changes'] = 'HKCategoryTypeIdentifierSleepChanges';
-dataTypes['sleeping_wrist_temp'] = 'HKQuantityTypeIdentifierAppleSleepingWristTemperature';
-
-
-/////////////////////////////// URINARY /////////////////////////////////
-dataTypes['bladder_incontinence'] = 'HKCategoryTypeIdentifierBladderIncontinence';
-
-///////////////////////////////// VITALS ////////////////////////////////
-dataTypes['heart_rate_variability_sdnn'] = 'HKQuantityTypeIdentifierHeartRateVariabilitySDNN';
-dataTypes['heart_rate'] = 'HKQuantityTypeIdentifierHeartRate';
-dataTypes['high_heart_rate_event'] = 'HKCategoryTypeIdentifierHighHeartRateEvent';
-dataTypes['irregular_heart_rhythm_event'] = 'HKCategoryTypeIdentifierIrregularHeartRhythmEvent';
-dataTypes['low_cardio_event'] = 'HKCategoryTypeIdentifierLowCardioFitnessEvent';
-dataTypes['low_heart_rate_event'] = 'HKCategoryTypeIdentifierLowHeartRateEvent';
-dataTypes['walking_heart_rate_average'] = 'HKQuantityTypeIdentifierWalkingHeartRateAverage';
-
-// for parseable units in HK, see https://developer.apple.com/documentation/healthkit/hkunit/1615733-unitfromstring?language=objc
-
-units['appleExerciseTime'] = 'min';
-units['blood_alcohol_content'] = 'percent';
-units['blood_glucose'] = 'mg/dL';
-units['blood_pressure_diastolic'] = 'mmHg';
-units['blood_pressure_systolic'] = 'mmHg';
-units['blood_pressure'] = 'mmHg';
-units['bmi'] = 'count';
-units['calories.active'] = 'kcal';
-units['calories.basal'] = 'kcal';
-units['calories'] = 'kcal';
-units['distance.cycling'] = 'm';
-units['distance.walkingRunning'] = 'm';
-units['distance.wheelchair'] = 'm';
-units['distance'] = 'm';
-units['downhill_snow_sports.distance'] = 'm';
-units['electrodermal_activity'] = 'mcS';
-units['environmental_audio_exposure'] = 'dBASPL';
-units['fat_percentage'] = '%';
-units['forced_expiratory_volume1'] = 'L';
-units['forced_vital_capacity'] = 'L';
-units['flights_climbed'] = 'count';
-units['headphone_audio_exposure'] = 'dBASPL';
-units['heart_rate_variability_sdnn'] = 'ms';
-units['heart_rate.resting'] = 'count/min';
-units['heart_rate.variability'] = 'ms';
-units['heart_rate'] = 'count/min';
-units['heart_rate'] = 'count/min';
-units['height'] = 'cm';
-units['inhaler_usage'] = 'count';
-units['insulin'] = 'IU';
-units['lean_body_mass'] = 'kg';
-units['nike_fuel'] = 'count';
-units['number_of_alcoholic_beverages'] = 'count';
-units['number_of_times_fallen'] = 'count';
-units['nutrition.biotin'] = 'mcg';
-units['nutrition.caffeine'] = 'mg';
-units['nutrition.calcium'] = 'mg';
-units['nutrition.calories'] = 'kcal';
-units['nutrition.carbs.total'] = 'g';
-units['nutrition.chloride'] = 'mg';
-units['nutrition.cholesterol'] = 'mg';
-units['nutrition.chromium'] = 'mcg';
-units['nutrition.copper'] = 'mg';
-units['nutrition.dietary_fiber'] = 'g';
-units['nutrition.fat.monounsaturated'] = 'g';
-units['nutrition.fat.polyunsaturated'] = 'g';
-units['nutrition.fat.saturated'] = 'g';
-units['nutrition.fat.total'] = 'g';
-units['nutrition.folate'] = 'mcg';
-units['nutrition.iodine'] = 'mcg';
-units['nutrition.iron'] = 'mg';
-units['nutrition.magnesium'] = 'mg';
-units['nutrition.manganese'] = 'mg';
-units['nutrition.molybdenum'] = 'mcg';
-units['nutrition.niacin'] = 'mg';
-units['nutrition.pantothenic_acid'] = 'mg';
-units['nutrition.phosphorus'] = 'mg';
-units['nutrition.potassium'] = 'mg';
-units['nutrition.protein'] = 'g';
-units['nutrition.riboflavin'] = 'mg';
-units['nutrition.selenium'] = 'mcg';
-units['nutrition.sodium'] = 'mg';
-units['nutrition.sugar'] = 'g';
-units['nutrition.thiamin'] = 'mg';
-units['nutrition.vitamin_a'] = 'mcg';
-units['nutrition.vitamin_B12'] = 'mcg';
-units['nutrition.vitamin_B6'] = 'mg';
-units['nutrition.vitamin_c'] = 'mg';
-units['nutrition.vitamin_D'] = 'mcg';
-units['nutrition.vitamin_E'] = 'mg';
-units['nutrition.vitamin_K'] = 'mcg';
-units['nutrition.water'] = 'mL';
-units['nutrition.zinc'] = 'mg';
-units['nutrition'] = ['g', 'mL', 'kcal'];
-units['oxygen_saturation'] = '%';
-units['peak_expiratory_flow_rate'] = 'L/min';
-units['peripheral_perfusion_index'] = 'percent';
-units['resp_rate'] = 'count/min';
-units['six_minute_walk_test_distance'] = 'm';
-units['sleeping_wrist_temp'] = 'degC';
-units['stair_ascent_speed'] = 'm/s';
-units['stair_descent_speed'] = 'm/s';
-units['stand_time'] = 's';
-units['steps'] = 'count';
-units['swimming.distance'] = 'm';
-units['swimming.stroke_count'] = 'count';
-units['temperature'] = 'degC';
-units['temperature.basal'] = 'degC';
-units['uv_exposure'] = 'count';
-units['vo2max'] = 'ml/(kg*min)';
-units['waist_circumference'] = 'cm';
-units['walking_asymmetry_percentage'] = 'percent';
-units['walking_double_support_percentage'] = 'percent';
-units['walking_heart_rate_average'] = 'count/min';
-units['walking_speed'] = 'm/s';
-units['walking_steadiness'] = 'percent';
-units['walking_step_length'] = 'cm';
-units['weight'] = 'kg';
-units['wheelchair.push_count'] = 'count';
 
 // just a wrapper for querying Telerik's if HK is available
 Health.prototype.isAvailable = function (success, error) {
@@ -580,23 +266,17 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 						if (samples[i].metadata && samples[i].metadata.HKMetadataKeyBloodGlucoseSource) res.value.source = samples[i].metadata.HKMetadataKeyBloodGlucoseSource;
 					} else if (opts.dataType === 'insulin') {
 						res.value = {
-							insulin: samples[i].quantity
+						insulin: samples[i].quantity
 						};
 						if (samples[i].metadata && samples[i].metadata.HKInsulinDeliveryReason) {
 							if (samples[i].metadata.HKInsulinDeliveryReason == 1) res.value.reason = 'basal';
 							else res.value.reason = 'bolus';
 						}
 						if (samples[i].metadata && samples[i].metadata.HKMetadataKeyInsulinDeliveryReason) res.value.reason = samples[i].metadata.HKMetadataKeyInsulinDeliveryReason; // overwrite HKInsulinDeliveryReason
-					} else if (opts.dataType === 'ovulation_test_result') {
-						const resultTypes = {
-							1: { key: 1, value: 'negative' },
-							2: { key: 4, value: 'luteinizing_hormone_surge' },
-							3: { key: 0, value: 'indeterminate' },
-							4: { key: 3, value: 'estrogen_surge' },
-						};
+					} else if (mutable[opts.dataType]) {
 						if (typeof samples[i].value === 'number') {
-							res.value = resultTypes[samples[i].value].key;
-							res.testResult = resultTypes[samples[i].value].value;
+							res.value = mutable[opts.dataType][samples[i].value].categoryTypeKey;
+							res.result = mutable[opts.dataType][samples[i].value].value;
 						}
 					} else {
 						if (['string', 'number'].indexOf(typeof samples[i].quantity) > -1) {
@@ -733,6 +413,8 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 		onError('unknown data type ' + opts.dataType);
 	}
 };
+	
+
 
 Health.prototype.queryAggregated = function (opts, onSuccess, onError) {
 	const supportedTypes = [

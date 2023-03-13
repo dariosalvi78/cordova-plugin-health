@@ -33,6 +33,9 @@
     <js-module src="www/ios/health.js" name="health">
       <clobbers target="navigator.health" />
     </js-module>
+    <js-module src="www/ios/constants.js" name="constants">
+      <clobbers target="navigator.health.constants" />
+    </js-module>
 
     <config-file target="config.xml" parent="/*">
       <feature name="HealthKit">
