@@ -9,6 +9,20 @@ var Health = function () {
 Health.prototype.isAvailable = function (success, error) {
 	window.plugins.healthkit.available(success, error);
 };
+	
+Health.prototype.getAvailableDataTypes = function (callback) {
+	const result = [];
+	
+	Object.keys(dataTypes).forEach(key => {
+		result.push({
+			dataType: key,
+			HKEquivalent: dataTypes[key],
+			unit: units[key] || 'N/A'
+		});
+	});
+	
+	callback(null, result.sort((a, b) => a.dataType.localeCompare(b.dataType)));
+};
 
 // returns the equivalent native HealthKit data type from the custom one
 var getHKDataTypes = function (dtArr) {
