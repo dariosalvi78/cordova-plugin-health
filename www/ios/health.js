@@ -10,6 +10,26 @@ Health.prototype.isAvailable = function (success, error) {
 	window.plugins.healthkit.available(success, error);
 };
 	
+Health.prototype.getFormattedName = function (name) {
+	const prefixes = [
+		'HKCategoryTypeIdentifier',
+		'HKQuantityTypeIdentifier',
+		'HKCharacteristicTypeIdentifier',
+		'HKCorrelationTypeIdentifier',
+		'HKWorkoutTypeIdentifier',
+		'HKWorkoutActivityType'
+	];
+	
+	for (prefix of prefixes) {
+		if (name.includes(prefix)) {
+			
+			const trimmed = name.substring(prefix.length);
+			return trimmed.match(/[A-Z][a-z]+/g).join(' ');
+			break;
+		}
+	}
+}
+	
 Health.prototype.getAvailableDataTypes = function (callback) {
 	const result = [];
 	
@@ -161,8 +181,10 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 				res.endDate = new Date(data[i].endDate);
 				// filter the results based on the dates
 				if ((res.startDate >= opts.startDate) && (res.endDate <= opts.endDate)) {
-					res.activityName = data[i].activityType || "";
-					res.measureName = "HKWorkoutTypeIdentifier";
+					res.HKMeasureName = "HKWorkoutTypeIdentifier";
+					res.measureName = data[i].activityType;
+					res.HKactivityName = data[i].HKactivityType;
+					res.activityName = Health.prototype.getFormattedName(res.HKactivityName);
 					res.unit = 'activityType';
 					if (data[i].energy) {
 						res.calories = parseInt(data[i].energy);
@@ -265,7 +287,8 @@ Health.prototype.query = function (opts, onSuccess, onError) {
 					res.id = samples[i].UUID;
 					res.startDate = new Date(samples[i].startDate);
 					res.endDate = new Date(samples[i].endDate);
-					res.measureName = (samples[i]["categoryType.identifier"] || samples[i].quantityType || samples[i].correlationType || "");
+					res.HKMeasureName = (samples[i]["categoryType.identifier"] || samples[i].quantityType || samples[i].correlationType || "");
+					res.measureName = Health.prototype.getFormattedName(res.HKMeasureName);
 
 					if (opts.dataType === 'blood_glucose') {
 						res.value = {

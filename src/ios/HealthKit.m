@@ -838,6 +838,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                                         HKPluginKeySourceBundleId: source.bundleIdentifier,
                                         HKPluginKeySourceName: source.name,
                                         @"activityType": workoutActivity,
+                                        @"HKactivityType": [WorkoutActivityConversion convertStringToHKWorkoutActivityTypeString:workoutActivity],
                                         @"measureName": HKWorkoutTypeIdentifier,
                                         @"UUID": [workout.UUID UUIDString],
                                         @"swimStrokeValue": totalSwimmingStrokeCountString,
