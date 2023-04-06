@@ -434,7 +434,7 @@
   return HKWorkoutActivityTypeOther;
 }
 
-+ (NSString) convertStringToHKWorkoutActivityTypeString:(NSString*) which {
++ (NSString*) convertStringToHKWorkoutActivityTypeString:(NSString*) which {
 
   if ([which isEqualToString:@"archery"]) { return @"HKWorkoutActivityTypeArchery";
 
@@ -448,7 +448,7 @@
 
   } else if ([which isEqualToString:@"biking"]) { return @"HKWorkoutActivityTypeCycling";
 
-  } else if ([which isEqualToString:@"biking.hand"]) { return @"HKWorkoutActivityTypeHandCycling;"
+  } else if ([which isEqualToString:@"biking.hand"]) { return @"HKWorkoutActivityTypeHandCycling";
 
   } else if ([which isEqualToString:@"biking.mountain"]) { return @"HKWorkoutActivityTypeCycling";
 
@@ -689,7 +689,7 @@
   }
 
   // When no match is available, return other as the result
-  return HKWorkoutActivityTypeOther;
+  return @"HKWorkoutActivityTypeOther";
 }
 
 @end
