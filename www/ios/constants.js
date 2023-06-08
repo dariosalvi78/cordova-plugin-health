@@ -42,6 +42,7 @@ module.exports = {
 		'oxygen_saturation': 'HKQuantityTypeIdentifierOxygenSaturation',
 		'resp_rate': 'HKQuantityTypeIdentifierRespiratoryRate',
 		'temperature': 'HKQuantityTypeIdentifierBodyTemperature',
+		'sleeping_wrist_temperature': 'HKQuantityTypeIdentifierAppleSleepingWristTemperature',
 		'vo2max': 'HKQuantityTypeIdentifierVO2Max',
 
 		/////////////////////////////// NUTRITION ///////////////////////////////
@@ -295,6 +296,7 @@ module.exports = {
 		'swimming.stroke_count': 'count',
 		'temperature': 'degC',
 		'temperature.basal': 'degC',
+		'sleeping_wrist_temperature': 'degC',
 		'uv_exposure': 'count',
 		'vo2max': 'ml/(kg*min)',
 		'waist_circumference': 'cm',
