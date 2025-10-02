@@ -137,6 +137,7 @@
 
     <source-file src="src/android/HealthPlugin.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/StepsFunctions.java" target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/StairsFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/WeightFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/HeightFunctions.java" target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/NutritionFunctions.java"
