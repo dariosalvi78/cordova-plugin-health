@@ -29,6 +29,7 @@ import androidx.health.connect.client.records.DistanceRecord;
 import androidx.health.connect.client.records.ExerciseLap;
 import androidx.health.connect.client.records.ExerciseSegment;
 import androidx.health.connect.client.records.ExerciseSessionRecord;
+import androidx.health.connect.client.records.FloorsClimbedRecord;
 import androidx.health.connect.client.records.HeartRateRecord;
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord;
 import androidx.health.connect.client.records.HeightRecord;
@@ -271,6 +272,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("steps")) {
             return StepsFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("stairs")) {
+            return StairsFunctions.dataTypeToClass();
+        }
         if (name.equalsIgnoreCase("weight")) {
             return WeightFunctions.dataTypeToClass();
         }
@@ -503,6 +507,8 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPES here we need to add support for each different data type
                     if (datapoint instanceof StepsRecord) {
                         StepsFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof FloorsClimbedRecord) {
+                        StairsFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof WeightRecord) {
                         WeightFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof HeightRecord) {
@@ -691,6 +697,8 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         request = StepsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("stairs")) {
+                        request = StairsFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition.water")) {
@@ -760,6 +768,8 @@ public class HealthPlugin extends CordovaPlugin {
                     // DATA_TYPE: add here support for new data types
                     if (datatype.equalsIgnoreCase("steps")) {
                         request = StepsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
+                    } else if (datatype.equalsIgnoreCase("stairs")) {
+                        request = StairsFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition")) {
                         request = NutritionFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration, dor);
                     } else if (datatype.equalsIgnoreCase("nutrition.water")) {
@@ -833,6 +843,8 @@ public class HealthPlugin extends CordovaPlugin {
                 // DATA_TYPE add here support for new data types
                 if (datatype.equalsIgnoreCase("steps")) {
                     request = StepsFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("stairs")) {
+                    request = StairsFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("nutrition")) {
                     request = NutritionFunctions.prepareAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("nutrition.water")) {
@@ -901,6 +913,8 @@ public class HealthPlugin extends CordovaPlugin {
         // DATA_TYPE add here new data types when extending
         if (datatype.equalsIgnoreCase("steps")) {
             StepsFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("stairs")) {
+            StairsFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("nutrition")) {
             NutritionFunctions.populateFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("nutrition.water")) {
@@ -1014,6 +1028,8 @@ public class HealthPlugin extends CordovaPlugin {
 
             if (datatype.equalsIgnoreCase("steps")) {
                 StepsFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("stairs")) {
+                StairsFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("weight")) {
                 WeightFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("height")) {

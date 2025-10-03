@@ -39,7 +39,7 @@ cordova plugin add cordova-plugin-health --variable HEALTH_READ_PERMISSION='App 
 
 * HealthConnect is made standard on (Google versions of) Android [from version 14 (API level 34)](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-1). On older versions of Android, the user has to install the Health Connect app from the Play Store. Be aware that the Health Connect app is only compatible with Android 9 (API level 28) or higher see [this](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-2).
 * Health Connect SDK used here (v 1.1.0-alpha10) needs to target Android 15 (API level 35) and the minimum SDK level should be 26. Also Gradle and Android Gradle Plugin (AGP) should be recent, versions 8.7 for Gradle and 8.6.0 for the Android Plugin work.
-As the lateste version of cordova Android usually use older versions, it is necessary to configure those more updated versions in to the config.xml of your cordova app project. For example:
+As the latest version of cordova Android usually use older versions, it is necessary to configure those more updated versions in to the config.xml of your cordova app project. For example:
 ```xml
 <platform name="android">
   ...
@@ -138,37 +138,38 @@ compileSdkVersion = 35
 
 These are currently supported in both Android and iOS. Please notice that older versions of this plugin included more data types, but with Google Fit, not Health Connect. Support for previously supported data types has not been removed on iOS, it's simply not listed here. The plan is to complete the porting of all previously supported data types from Google Fit to Health Connect, just be patient, or give us a hand.
 
-| Data type       | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
-|-----------------|-------|-----------------------------------------------|------------------------------------------|
-| gender          |       | HKCharacteristicTypeIdentifierBiologicalSex   | NA        |
-| date_of_birth   |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
-| weight          | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
-| height          | m     | HKQuantityTypeIdentifierHeight                | HeightRecord                             |
-| bmi             | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
-| fat_percentage  | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
-| steps           | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
-| distance        | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
-| activity        | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
-| appleExerciseTime | min | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
-| sleep           | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
-| calories.active | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
-| calories.basal  | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
-| calories        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
-| heart_rate      | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
-| heart_rate.resting | bpm | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
+| Data type              | Unit  |    HealthKit equivalent                       |  Health Connect equivalent               |
+|------------------------|-------|-----------------------------------------------|------------------------------------------|
+| gender                 |       | HKCharacteristicTypeIdentifierBiologicalSex   | NA        |
+| date_of_birth          |       | HKCharacteristicTypeIdentifierDateOfBirth     | NA        |
+| weight                 | kg    | HKQuantityTypeIdentifierBodyMass              |   Weight                                 |
+| height                 | m     | HKQuantityTypeIdentifierHeight                | HeightRecord                             |
+| bmi                    | count | HKQuantityTypeIdentifierBodyMassIndex         | NA                                       |
+| fat_percentage         | %     | HKQuantityTypeIdentifierBodyFatPercentage     |   BodyFatRecord                          |
+| steps                  | count | HKQuantityTypeIdentifierStepCount             |   StepsRecord                            |
+| stairs                 | count | HKQuantityTypeIdentifierFlightsClimbed        |   FloorsClimbedRecord                    |
+| distance               | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
+| activity               | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
+| appleExerciseTime      | min | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
+| sleep                  | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
+| calories.active        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
+| calories.basal         | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
+| calories               | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
+| heart_rate             | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
+| heart_rate.resting     | bpm | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
 | heart_rate.variability | bpm | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                   |
-| workout_route   | bpm   | HKWorkoutRouteType                            | NA                                       |
-| blood_glucose   | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
-| blood_pressure  | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
-| mindfulness     | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
-| UVexposure      | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
-| nutrition       | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
-| nutrition.carbs.total | g | HKQuantityTypeIdentifierDietaryCarbohydrates | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL |
-| nutrition.fat.total | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL         |
-| nutrition.protein | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
-| nutrition.calories | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL          |
-| nutrition.water | ml    | HKQuantityTypeIdentifierDietaryWater          | HydrationRecord, TYPE_HYDRATION         |
-| nutrition.sugar | g     | HKQuantityTypeIdentifierDietarySugar          | NutritionRecord, NUTRIENT_SUGAR           |
+| workout_route          | bpm   | HKWorkoutRouteType                            | NA                                       |
+| blood_glucose          | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
+| blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
+| mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
+| UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
+| nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
+| nutrition.carbs.total  | g | HKQuantityTypeIdentifierDietaryCarbohydrates | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL |
+| nutrition.fat.total    | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL         |
+| nutrition.protein      | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
+| nutrition.calories     | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL          |
+| nutrition.water        | ml    | HKQuantityTypeIdentifierDietaryWater          | HydrationRecord, TYPE_HYDRATION         |
+| nutrition.sugar        | g     | HKQuantityTypeIdentifierDietarySugar          | NutritionRecord, NUTRIENT_SUGAR           |
 
 
 **Note**: units of measurement are fixed!
@@ -456,9 +457,9 @@ cordova.plugins.health.store({
 
 #### Android quirks
 
-- This operation correponds to an insert, not an update. If you want to update the data point you need to delete it first.
+- This operation corresponds to an insert, not an update. If you want to update the data point you need to delete it first.
 - Not all datatypes support start and end timestamps, some, such as weight, only have one timestamp. The plugin will use the start timestamp to set the end timestamp when querying.
-- In Android you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
+- In Android, you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
 - When storing `heart_rate`, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally and is probably more efficient.
 - `sleep` in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` where each object is a stage, as value.
 - `nutrition` in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
