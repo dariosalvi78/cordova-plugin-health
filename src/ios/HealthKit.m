@@ -2048,32 +2048,94 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
 - (void)fetchHeartRateForWorkout:(HKWorkout*)workout withCommand:(CDVInvokedUrlCommand*)command {
     HKQuantityType *heartRateType = [HKObjectType quantityTypeForIdentifier:HKQuantityTypeIdentifierHeartRate];
-
-    // Create a predicate to fetch heart rate samples during the workout period
-    NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:workout.startDate endDate:workout.endDate options:HKQueryOptionStrictStartDate];
-
-    HKSampleQuery *heartRateQuery = [[HKSampleQuery alloc] initWithSampleType:heartRateType predicate:predicate limit:HKObjectQueryNoLimit sortDescriptors:nil resultsHandler:^(HKSampleQuery *query, NSArray *results, NSError *error) {
+    
+    // Use predicateForObjectsFromWorkout to get samples associated with this workout
+    NSPredicate *predicate = [HKQuery predicateForObjectsFromWorkout:workout];
+    
+    HKSampleQuery *heartRateQuery = [[HKSampleQuery alloc] initWithSampleType:heartRateType 
+                                                                     predicate:predicate 
+                                                                         limit:HKObjectQueryNoLimit 
+                                                               sortDescriptors:nil 
+                                                                resultsHandler:^(HKSampleQuery *query, NSArray *results, NSError *error) {
         if (error) {
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Error fetching heart rate data."];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR 
+                                                              messageAsString:@"Error fetching heart rate data."];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
-
+        
         NSMutableArray *heartRateArray = [NSMutableArray array];
+        dispatch_group_t group = dispatch_group_create();
+        
         for (HKQuantitySample *sample in results) {
-            double heartRate = [sample.quantity doubleValueForUnit:[HKUnit unitFromString:@"count/min"]];
-            NSDate *timestamp = sample.startDate;
-            NSDictionary *heartRateDict = @{
-                @"bpm": @(heartRate),
-                @"timestamp": @([timestamp timeIntervalSince1970] * 1000)  // Convert to milliseconds since epoch
-            };
-            [heartRateArray addObject:heartRateDict];
+            // Check if this is a discrete quantity sample (could be a series)
+            if ([sample isKindOfClass:[HKDiscreteQuantitySample class]]) {
+                HKDiscreteQuantitySample *discreteSample = (HKDiscreteQuantitySample *)sample;
+                
+                // Check if it's a series (count > 1 means condensed data)
+                if (discreteSample.count > 1) {
+                    // This is a condensed series - fetch detailed data
+                    dispatch_group_enter(group);
+                    
+                    NSPredicate *seriesPredicate = [HKQuery predicateForObjectWithUUID:discreteSample.UUID];
+                    
+                    HKQuantitySeriesSampleQuery *detailQuery = [[HKQuantitySeriesSampleQuery alloc] 
+                        initWithQuantityType:heartRateType 
+                        predicate:seriesPredicate 
+                        quantityHandler:^(HKQuantitySeriesSampleQuery *seriesQuery, HKQuantity *quantity, NSDateInterval *dateInterval, HKQuantitySample *quantitySample, BOOL done, NSError *seriesError) {
+                            
+                            if (quantity && dateInterval) {
+                                double heartRate = [quantity doubleValueForUnit:[HKUnit unitFromString:@"count/min"]];
+                                NSDictionary *heartRateDict = @{
+                                    @"bpm": @(heartRate),
+                                    @"timestamp": @([dateInterval.startDate timeIntervalSince1970] * 1000)
+                                };
+                                
+                                @synchronized(heartRateArray) {
+                                    [heartRateArray addObject:heartRateDict];
+                                }
+                            }
+                            
+                            if (done) {
+                                dispatch_group_leave(group);
+                            }
+                        }];
+                    
+                    [[HealthKit sharedHealthStore] executeQuery:detailQuery];
+                    
+                } else {
+                    // Single sample - use directly
+                    double heartRate = [sample.quantity doubleValueForUnit:[HKUnit unitFromString:@"count/min"]];
+                    NSDictionary *heartRateDict = @{
+                        @"bpm": @(heartRate),
+                        @"timestamp": @([sample.startDate timeIntervalSince1970] * 1000)
+                    };
+                    [heartRateArray addObject:heartRateDict];
+                }
+            } else {
+                // Regular quantity sample (older data, not condensed)
+                double heartRate = [sample.quantity doubleValueForUnit:[HKUnit unitFromString:@"count/min"]];
+                NSDictionary *heartRateDict = @{
+                    @"bpm": @(heartRate),
+                    @"timestamp": @([sample.startDate timeIntervalSince1970] * 1000)
+                };
+                [heartRateArray addObject:heartRateDict];
+            }
         }
-
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:heartRateArray];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        
+        // Wait for all series queries to complete, then return results
+        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+            // Sort by timestamp before returning
+            NSArray *sortedArray = [heartRateArray sortedArrayUsingComparator:^NSComparisonResult(NSDictionary *a, NSDictionary *b) {
+                return [a[@"timestamp"] compare:b[@"timestamp"]];
+            }];
+            
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK 
+                                                               messageAsArray:sortedArray];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        });
     }];
-
+    
     [[HealthKit sharedHealthStore] executeQuery:heartRateQuery];
 }
 
