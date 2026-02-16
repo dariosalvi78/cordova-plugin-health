@@ -86,7 +86,12 @@
 
   <!-- android -->
   <platform name="android">
-    <framework src="androidx.health.connect:connect-client:1.1.0-alpha10" />
+    <framework src="androidx.health.connect:connect-client:1.2.0-alpha02" />
+    <framework src="androidx.work:work-runtime:2.8.1" />
+	<framework src="androidx.concurrent:concurrent-futures:1.1.0" />
+	<framework src="androidx.localbroadcastmanager:localbroadcastmanager:1.1.0" />
+	<!--Used ? <framework src="com.google.guava:guava:32.1.3-android" />-->
+	  
     <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
     <config-file target="AndroidManifest.xml" parent="/*">
@@ -157,6 +162,8 @@
       target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/ActivityMapper.java" target-dir="src/org/apache/cordova/health/" />
 
+	<source-file src="src/android/ScheduleWorker.java" target-dir="src/org/apache/cordova/health/" />
+	
     <js-module src="www/android/health.js" name="health">
       <clobbers target="cordova.plugins.health" />
     </js-module>

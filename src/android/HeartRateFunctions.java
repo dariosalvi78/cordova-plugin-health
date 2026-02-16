@@ -128,7 +128,7 @@ public class HeartRateFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 samples,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(hrRecord);
     }
@@ -195,7 +195,7 @@ public class HeartRateFunctions {
                 Instant.ofEpochMilli(st),
                 ZoneOffset.from(ZonedDateTime.now()),
                 bpm,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }
@@ -218,7 +218,7 @@ public class HeartRateFunctions {
                 Instant.ofEpochMilli(st),
                 ZoneOffset.from(ZonedDateTime.now()),
                 ms,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }

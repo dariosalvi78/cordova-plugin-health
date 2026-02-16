@@ -195,11 +195,11 @@ public class BloodPressureFunctions {
 
         BloodPressureRecord record = new BloodPressureRecord(
                 Instant.ofEpochMilli(st), null,
+                Metadata.unknownRecordingMethod(),
                 pressure_sys,
                 pressure_dia,
                 body_position,
-                location,
-                Metadata.EMPTY);
+                location);
 
         data.add(record);
     }

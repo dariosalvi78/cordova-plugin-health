@@ -13,6 +13,9 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContract;
 import androidx.health.connect.client.HealthConnectClient;
+
+import androidx.health.connect.client.HealthConnectFeatures;
+
 import androidx.health.connect.client.PermissionController;
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
@@ -78,9 +81,49 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import java.util.concurrent.TimeUnit;
+
+
 import kotlin.coroutines.EmptyCoroutineContext;
 import kotlin.reflect.KClass;
+import kotlin.coroutines.Continuation;
+import kotlin.jvm.functions.Function1;
+import kotlin.coroutines.intrinsics.IntrinsicsKt;
+
+import kotlin.Unit;
+import kotlin.coroutines.CoroutineContext;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+
 import kotlinx.coroutines.BuildersKt;
+
+
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.OneTimeWorkRequest.Builder;
+import androidx.work.WorkManager;
+import androidx.work.Data;
+
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+
+import androidx.work.WorkInfo;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import android.os.Handler;
+import android.os.Looper;
+
+import android.content.Context;
+
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
+
 
 public class HealthPlugin extends CordovaPlugin {
 
@@ -88,8 +131,11 @@ public class HealthPlugin extends CordovaPlugin {
      * Tag used in logs
      */
     public static String TAG = "cordova-plugin-health";
+	
+	// Déclarer le BroadcastReceiver comme variable de classe
+	private BroadcastReceiver receiver;
 
-    /**
+	 /**
      * Callback context, reference needed when used in functions initialized before
      * the plugin is called
      */
@@ -206,6 +252,26 @@ public class HealthPlugin extends CordovaPlugin {
                 try {
                     connectAPI();
                     checkAuthorization(args, true);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
+                }
+            });
+            return true;
+		} else if ("stopBackGround".equals(action)) {
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    stopBackGround(args);
+                } catch (Exception ex) {
+                    callbackContext.error(ex.getMessage());
+                }
+            });
+            return true;
+		} else if ("queryInBackGround".equals(action)) {
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    connectAPI();
+                    queryInBackGround(args);
                 } catch (Exception ex) {
                     callbackContext.error(ex.getMessage());
                 }
@@ -438,6 +504,181 @@ public class HealthPlugin extends CordovaPlugin {
         }
         obj.put("entryMethod", method);
     }
+	
+	private void stopBackGround (final JSONArray args) {
+		try {
+
+			Log.d(TAG, "stopBackGround called");
+			cleanup();	
+
+		} catch (Exception ex) {
+            Log.e(TAG, "stopBackGround is not possible", ex);
+            callbackContext.error("stopBackGround is not possible");
+        }
+	}
+
+	private void queryInBackGround (final JSONArray args) {
+	
+		try {
+            if (!args.getJSONObject(0).has("startDate")) {
+                callbackContext.error("Missing argument startDate");
+                return;
+            }
+            long st = args.getJSONObject(0).getLong("startDate");
+			
+            if (!args.getJSONObject(0).has("endDate")) {
+                callbackContext.error("Missing argument endDate");
+                return;
+            }
+            long et = args.getJSONObject(0).getLong("endDate");
+			
+            if (!args.getJSONObject(0).has("dataType")) {
+                callbackContext.error("Missing argument dataType");
+                return;
+            }
+            String datatype = args.getJSONObject(0).getString("dataType");
+            KClass<? extends Record> dt = dataTypeNameToClass(datatype);
+			
+            if (dt == null) {
+                callbackContext.error("Datatype " + datatype + " not supported");
+                return;
+            }
+			
+			int limit = 1000;
+            if (args.getJSONObject(0).has("limit")) {
+                limit = args.getJSONObject(0).getInt("limit");
+            }
+            boolean ascending = false;
+            if (args.getJSONObject(0).has("ascending")) {
+                ascending = args.getJSONObject(0).getBoolean("ascending");
+            }
+			
+			
+			if (healthConnectClient.getFeatures().getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND)
+                == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE) {
+				
+				// Check if necessary permission is granted
+				Set<String> grantedPermissions = BuildersKt.runBlocking(
+                    EmptyCoroutineContext.INSTANCE,
+                    (s, c) -> healthConnectClient.getPermissionController().getGrantedPermissions(c));
+
+				if (!grantedPermissions.contains("android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND")) {
+					// Perform read in foreground
+					callbackContext.error("You do not authorize background request");
+					return;
+				} else {
+					
+					Log.d(TAG, "Data queryInBackGround successful");
+					
+					initBroadcastReceiver(); // Enregistrer le BroadcastReceiver
+					
+					//Log.d(TAG, "Après initBroadcastReceiver");
+					
+					
+					Constraints constraints = new Constraints.Builder()
+						.setRequiredNetworkType(NetworkType.NOT_REQUIRED) // Pas besoin de réseau
+						.setRequiresBatteryNotLow(false) // Pas besoin que la batterie soit suffisante
+						.setRequiresStorageNotLow(false) // Pas besoin que l'espace de stockage soit suffisant
+						.setRequiresCharging(false) // Pas besoin que l'appareil soit en charge
+						.build();
+
+					Data inputData = new Data.Builder()
+										.putString("DATA_TYPE", dt.toString())
+										.putLong("TIME_START", st)
+										.putLong("TIME_END", et)
+										.putInt("DATA_LIMIT", limit)
+										.putBoolean("DATA_ASCENDING", ascending)
+										.build();
+										
+					
+					
+					// Création d'un OneTimeWorkRequest
+					OneTimeWorkRequest oneTimeWorkRequest = new OneTimeWorkRequest.Builder(ScheduleWorker.class)
+						.setConstraints(constraints)
+						.setInputData(inputData)
+						.build();
+
+					// Planification du Worker
+					WorkManager.getInstance(cordova.getContext().getApplicationContext())
+						.enqueue(oneTimeWorkRequest); // Pas besoin de tag ou de politique pour un OneTimeWorkRequest
+					
+						
+				}		
+								
+			} else {
+				// Background reading is not available, perform read in foreground
+				callbackContext.error("Your version of Android does not support background data reading.");
+				return;
+			}
+			
+			
+			
+		} catch (JSONException ex) {
+            Log.e(TAG, "Could not parse query object", ex);
+            callbackContext.error("Could not parse query object");
+        } catch (InterruptedException ex2) {
+            Log.e(TAG, "Thread interrupted", ex2);
+            callbackContext.error("Thread interrupted" + ex2.getMessage());
+        }
+	
+	}
+	
+	
+	// Méthode pour initialiser le BroadcastReceiver
+	private void initBroadcastReceiver() {
+		
+		try {
+			receiver = new BroadcastReceiver() {
+				@Override
+				public void onReceive(Context context, Intent intent) {
+					String jsonResult = intent.getStringExtra("json_result");
+					if (jsonResult != "") {
+						try {
+							JSONArray resultset = new JSONArray(jsonResult);
+							Log.d(TAG, "JSON Reçu, taille : " + resultset.length());
+							callbackContext.success(resultset);					
+						} catch (JSONException e) {
+							Log.e(TAG, "Erreur de parsing JSON : ", e);
+							callbackContext.error("Erreur de parsing JSON : " + e.getMessage());
+						} finally {
+							cleanup(); // Nettoyage après traitement
+						}
+					}
+					else {
+						callbackContext.success();
+						Log.d(TAG, "JSON Reçu, aucun résultat");
+						cleanup();
+					}
+				}
+			};
+			
+			if (cordova.getActivity() != null) {
+				LocalBroadcastManager.getInstance(cordova.getActivity().getApplicationContext())
+					.registerReceiver(receiver, new IntentFilter("cordova-plugin-health.SW_WORK_COMPLETE"));
+			} else {
+				Log.e(TAG, "Aucune activité disponible pour enregistrer le BroadcastReceiver");
+			}
+				
+		
+		} catch (Exception e) {
+			cleanup();
+			Log.e(TAG, "Erreur: ", e);
+			callbackContext.error("Erreur: " + e.getMessage());
+		}
+
+	}
+
+	// Méthode pour nettoyer (à appeler quand nécessaire)
+	private void cleanup() {
+		if (receiver != null) {
+			
+			LocalBroadcastManager.getInstance(cordova.getActivity().getApplicationContext())
+				.unregisterReceiver(receiver);
+			
+			receiver = null;
+			
+		}		
+	}
 
     private void query(final JSONArray args) {
 
@@ -1040,7 +1281,7 @@ public class HealthPlugin extends CordovaPlugin {
                 BodyFatRecord record = new BodyFatRecord(
                         Instant.ofEpochMilli(st), null,
                         new Percentage(perc),
-                        Metadata.EMPTY);
+                        Metadata.unknownRecordingMethod());
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("activity")) {
                 String activityStr = args.getJSONObject(0).getString("value");
@@ -1053,9 +1294,9 @@ public class HealthPlugin extends CordovaPlugin {
                 ExerciseSessionRecord record = new ExerciseSessionRecord(
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
-                        exerciseType,
-                        title, notes,
-                        Metadata.EMPTY,
+                        Metadata.unknownRecordingMethod(),
+						exerciseType,
+                        title, notes,                        
                         segments, laps);
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("calories")) {
@@ -1065,7 +1306,7 @@ public class HealthPlugin extends CordovaPlugin {
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
                         Energy.kilocalories(kcals),
-                        Metadata.EMPTY);
+                        Metadata.unknownRecordingMethod());
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("calories.active")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
@@ -1074,7 +1315,7 @@ public class HealthPlugin extends CordovaPlugin {
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
                         Energy.kilocalories(kcals),
-                        Metadata.EMPTY);
+                        Metadata.unknownRecordingMethod());
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("calories.basal")) {
                 double kcals = args.getJSONObject(0).getDouble("value");
@@ -1086,7 +1327,7 @@ public class HealthPlugin extends CordovaPlugin {
                 BasalMetabolicRateRecord record = new BasalMetabolicRateRecord(
                         Instant.ofEpochMilli(st), null,
                         pow,
-                        Metadata.EMPTY);
+                        Metadata.unknownRecordingMethod());
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("blood_glucose")) {
                 JSONObject glucoseobj = args.getJSONObject(0).getJSONObject("value");
@@ -1102,7 +1343,7 @@ public class HealthPlugin extends CordovaPlugin {
                         Instant.ofEpochMilli(st), null,
                         Instant.ofEpochMilli(et), null,
                         len,
-                        Metadata.EMPTY);
+                        Metadata.unknownRecordingMethod());
 
                 data.add(record);
             } else if (datatype.equalsIgnoreCase("sleep")) {
