@@ -68,14 +68,13 @@ public class StepsFunctions {
     }
 
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data, Metadata metadata) throws JSONException {
         long steps = storeObj.getLong("value");
-        // TODO: we could add meta data when storing, including entry method, client ID and device
         StepsRecord record = new StepsRecord(
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 steps,
-                Metadata.EMPTY
+                metadata
         );
         data.add(record);
     }

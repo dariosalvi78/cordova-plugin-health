@@ -68,14 +68,13 @@ public class StairsFunctions {
     }
 
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data, Metadata metadata) throws JSONException {
         Double floors = storeObj.getDouble("value");
-        // TODO: we could add meta data when storing, including entry method, client ID and device
         FloorsClimbedRecord record = new FloorsClimbedRecord(
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 floors,
-                Metadata.EMPTY
+                metadata
         );
         data.add(record);
     }

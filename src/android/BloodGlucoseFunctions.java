@@ -91,7 +91,7 @@ public class BloodGlucoseFunctions {
     }
 
 
-    public static void prepareStoreRecords(JSONObject glucoseobj, long st, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject glucoseobj, long st, List<Record> data, Metadata metadata) throws JSONException {
         double glucose = glucoseobj.getDouble("glucose");
         BloodGlucose level = BloodGlucose.millimolesPerLiter(glucose);
 
@@ -145,7 +145,7 @@ public class BloodGlucoseFunctions {
                 specimenSource,
                 mealType,
                 relationToMeal,
-                Metadata.EMPTY);
+                metadata);
 
         data.add(record);
     }

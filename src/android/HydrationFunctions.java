@@ -77,7 +77,7 @@ public class HydrationFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data, Metadata metadata) throws JSONException {
         long st = storeObj.getLong("startDate");
         long et = storeObj.getLong("endDate");
 
@@ -88,7 +88,7 @@ public class HydrationFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 vol,
-                Metadata.EMPTY);
+                metadata);
         data.add(record);
     }
 }

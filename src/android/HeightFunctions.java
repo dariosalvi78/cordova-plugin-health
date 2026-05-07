@@ -82,13 +82,13 @@ public class HeightFunctions {
         }
 
 
-        public static void prepareStoreRecords(JSONObject storeObj, long st, List<Record> data) throws JSONException {
+        public static void prepareStoreRecords(JSONObject storeObj, long st, List<Record> data, Metadata metadata) throws JSONException {
             double meters = storeObj.getDouble("value");
 
             HeightRecord record = new HeightRecord(
                     Instant.ofEpochMilli(st), null,
                     Length.meters(meters),
-                    Metadata.EMPTY
+                    metadata
             );
             data.add(record);
         }

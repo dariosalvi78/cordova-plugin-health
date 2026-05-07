@@ -164,7 +164,7 @@ public class NutritionXFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(String datatype, JSONObject storeObj, long st, long et, List<Record> data)
+    public static void prepareStoreRecords(String datatype, JSONObject storeObj, long st, long et, List<Record> data, Metadata metadata)
             throws JSONException {
 
         int mealType = MealType.MEAL_TYPE_UNKNOWN;
@@ -239,7 +239,7 @@ public class NutritionXFunctions {
                 null,
                 null,
                 mealType,
-                Metadata.EMPTY);
+                metadata);
         data.add(record);
     }
 }

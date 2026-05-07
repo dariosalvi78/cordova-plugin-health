@@ -26,6 +26,8 @@ static NSString *const HKPluginKeySourceName = @"sourceName";
 static NSString *const HKPluginKeySourceBundleId = @"sourceBundleId";
 static NSString *const HKPluginKeyMetadata = @"metadata";
 static NSString *const HKPluginKeyUUID = @"UUID";
+static NSString *const HKPluginKeyId = @"id";
+static NSString *const PluginExternalIDMetadataKey = @"PluginExternalID";
 
 #pragma mark Categories
 
@@ -254,9 +256,10 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     NSString *sampleTypeString = inputDictionary[HKPluginKeySampleType];
 
     //Load optional metadata key
-    NSDictionary *metadata = inputDictionary[HKPluginKeyMetadata];
-    if (metadata == nil) {
-      metadata = @{};
+    NSMutableDictionary *metadata = [NSMutableDictionary dictionaryWithDictionary:inputDictionary[HKPluginKeyMetadata] ?: @{}];
+    NSString *externalId = inputDictionary[HKPluginKeyId];
+    if (externalId != nil) {
+        metadata[PluginExternalIDMetadataKey] = externalId;
     }
 
     if ([inputDictionary objectForKey:HKPluginKeyUnit]) {
@@ -310,9 +313,10 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         [objects addObject:sample];
     }
 
-    NSDictionary *metadata = inputDictionary[HKPluginKeyMetadata];
-    if (metadata == nil) {
-        metadata = @{};
+    NSMutableDictionary *metadata = [NSMutableDictionary dictionaryWithDictionary:inputDictionary[HKPluginKeyMetadata] ?: @{}];
+    NSString *externalId = inputDictionary[HKPluginKeyId];
+    if (externalId != nil) {
+        metadata[PluginExternalIDMetadataKey] = externalId;
     }
     return [self getHKCorrelationWithStartDate:startDate
                                        endDate:endDate
@@ -1903,8 +1907,6 @@ static NSString *const HKPluginKeyUUID = @"UUID";
  */
 - (void)deleteSamples:(CDVInvokedUrlCommand *)command {
   NSDictionary *args = command.arguments[0];
-  NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
-  NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
   NSString *sampleTypeString = args[HKPluginKeySampleType];
 
   HKSampleType *type = [HealthKit getHKSampleType:sampleTypeString];
@@ -1913,26 +1915,74 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     return;
   }
 
-  NSPredicate *predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+  NSPredicate *predicate;
+  NSString *externalId = args[HKPluginKeyId];
+  if (externalId != nil) {
+    predicate = [HKQuery predicateForObjectsWithMetadataKey:PluginExternalIDMetadataKey allowedValues:@[externalId]];
+  } else {
+    NSDate *startDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyStartDate] longValue]];
+    NSDate *endDate = [NSDate dateWithTimeIntervalSince1970:[args[HKPluginKeyEndDate] longValue]];
+    predicate = [HKQuery predicateForSamplesWithStartDate:startDate endDate:endDate options:HKQueryOptionStrictStartDate];
+  }
 
-  NSSet *requestTypes = [NSSet setWithObjects:type, nil];
-  [[HealthKit sharedHealthStore] requestAuthorizationToShareTypes:nil readTypes:requestTypes completion:^(BOOL success, NSError *error) {
-    __block HealthKit *bSelf = self;
-    if (success) {
-      [[HealthKit sharedHealthStore] deleteObjectsOfType:type predicate:predicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable deletionError) {
-        if (deletionError != nil) {
-          dispatch_sync(dispatch_get_main_queue(), ^{
-            [HealthKit triggerErrorCallbackWithMessage:deletionError.localizedDescription command:command delegate:bSelf.commandDelegate];
-          });
-        } else {
-          dispatch_sync(dispatch_get_main_queue(), ^{
-            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:(int)deletedObjectCount];
-            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
-          });
+  __block HealthKit *bSelf = self;
+
+  if ([type isKindOfClass:[HKCorrelationType class]]) {
+    // deleteObjectsOfType:predicate: does not work for correlation types.
+    // HKCorrelationQuery does not support metadata predicates — use HKSampleQuery
+    // which supports metadata predicates and returns HKCorrelation objects (subclass of HKSample).
+    HKSampleQuery *query = [[HKSampleQuery alloc] initWithSampleType:type
+                                                           predicate:predicate
+                                                               limit:HKObjectQueryNoLimit
+                                                     sortDescriptors:nil
+                                                      resultsHandler:^(HKSampleQuery *q, NSArray *samples, NSError *queryError) {
+      if (queryError != nil) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+          [HealthKit triggerErrorCallbackWithMessage:queryError.localizedDescription command:command delegate:bSelf.commandDelegate];
+        });
+        return;
+      }
+      if (samples.count == 0) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+          CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0];
+          [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        });
+        return;
+      }
+      // Collect correlations and all their constituent objects so nothing is left orphaned.
+      NSMutableArray *objectsToDelete = [NSMutableArray array];
+      for (HKSample *sample in samples) {
+        [objectsToDelete addObject:sample];
+        if ([sample isKindOfClass:[HKCorrelation class]]) {
+          [objectsToDelete addObjectsFromArray:((HKCorrelation *)sample).objects.allObjects];
         }
+      }
+      [[HealthKit sharedHealthStore] deleteObjects:objectsToDelete withCompletion:^(BOOL success, NSError *deletionError) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+          if (deletionError != nil) {
+            [HealthKit triggerErrorCallbackWithMessage:deletionError.localizedDescription command:command delegate:bSelf.commandDelegate];
+          } else {
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:(int)samples.count];
+            [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+          }
+        });
       }];
-    }
-  }];
+    }];
+    [[HealthKit sharedHealthStore] executeQuery:query];
+  } else {
+    [[HealthKit sharedHealthStore] deleteObjectsOfType:type predicate:predicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable deletionError) {
+      if (deletionError != nil) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+          [HealthKit triggerErrorCallbackWithMessage:deletionError.localizedDescription command:command delegate:bSelf.commandDelegate];
+        });
+      } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+          CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:(int)deletedObjectCount];
+          [bSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        });
+      }
+    }];
+  }
 }
 
 

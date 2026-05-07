@@ -99,7 +99,7 @@ public class HeartRateFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data, Metadata metadata) throws JSONException {
         List<HeartRateRecord.Sample> samples = new LinkedList<>();
 
         try {
@@ -128,7 +128,7 @@ public class HeartRateFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 samples,
-                Metadata.EMPTY
+                metadata
         );
         data.add(hrRecord);
     }
@@ -189,13 +189,13 @@ public class HeartRateFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareRestingStoreRecords(JSONObject storeObj, long st, List<Record> data) throws JSONException {
+    public static void prepareRestingStoreRecords(JSONObject storeObj, long st, List<Record> data, Metadata metadata) throws JSONException {
         long bpm = storeObj.getLong("value");
         RestingHeartRateRecord record = new RestingHeartRateRecord(
                 Instant.ofEpochMilli(st),
                 ZoneOffset.from(ZonedDateTime.now()),
                 bpm,
-                Metadata.EMPTY
+                metadata
         );
         data.add(record);
     }
@@ -212,13 +212,13 @@ public class HeartRateFunctions {
         obj.put("unit", "ms");
     }
 
-    public static void prepareVariabilityStoreRecords(JSONObject storeObj, long st, List<Record> data) throws JSONException {
+    public static void prepareVariabilityStoreRecords(JSONObject storeObj, long st, List<Record> data, Metadata metadata) throws JSONException {
         double ms = storeObj.getDouble("value");
         HeartRateVariabilityRmssdRecord record = new HeartRateVariabilityRmssdRecord(
                 Instant.ofEpochMilli(st),
                 ZoneOffset.from(ZonedDateTime.now()),
                 ms,
-                Metadata.EMPTY
+                metadata
         );
         data.add(record);
     }

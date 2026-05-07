@@ -157,7 +157,7 @@ public class BloodPressureFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject bloodpressobj, long st, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject bloodpressobj, long st, List<Record> data, Metadata metadata) throws JSONException {
         double diastolic = bloodpressobj.getDouble("diastolic");
         double systolic = bloodpressobj.getDouble("systolic");
 
@@ -199,7 +199,7 @@ public class BloodPressureFunctions {
                 pressure_dia,
                 body_position,
                 location,
-                Metadata.EMPTY);
+                metadata);
 
         data.add(record);
     }

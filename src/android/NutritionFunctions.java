@@ -156,7 +156,7 @@ public class NutritionFunctions {
         return new AggregateRequest(metrics, timeRange, dor);
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data)
+    public static void prepareStoreRecords(JSONObject storeObj, long st, long et, List<Record> data, Metadata metadata)
             throws JSONException {
         JSONObject nutritionObj = storeObj.getJSONObject("value");
 
@@ -250,7 +250,7 @@ public class NutritionFunctions {
                 null,
                 name,
                 mealType,
-                Metadata.EMPTY);
+                metadata);
         data.add(record);
     }
 

@@ -161,7 +161,7 @@ public class SleepFunctions {
         return SleepSessionRecord.STAGE_TYPE_UNKNOWN;
     }
 
-    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, List<Record> data, Metadata metadata) throws JSONException {
         // special flag to indicate that one wants to submit an entire session
         boolean keepSession = false;
         if (storeObj.has("sleepSession")) {
@@ -202,7 +202,7 @@ public class SleepFunctions {
                     null,
                     null,
                     stages,
-                    Metadata.EMPTY
+                    metadata
             );
             data.add(sleepSession);
 
@@ -233,7 +233,7 @@ public class SleepFunctions {
                     null,
                     null,
                     stages,
-                    Metadata.EMPTY
+                    metadata
             );
             data.add(sleepSession);
         }

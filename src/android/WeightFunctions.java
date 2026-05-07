@@ -84,13 +84,13 @@ public class WeightFunctions {
     }
 
 
-    public static void prepareStoreRecords(JSONObject storeObj, long st, List<Record> data) throws JSONException {
+    public static void prepareStoreRecords(JSONObject storeObj, long st, List<Record> data, Metadata metadata) throws JSONException {
         double kgs = storeObj.getDouble("value");
 
         WeightRecord record = new WeightRecord(
                 Instant.ofEpochMilli(st), null,
                 Mass.kilograms(kgs),
-                Metadata.EMPTY
+                metadata
         );
         data.add(record);
     }
