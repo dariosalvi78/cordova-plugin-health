@@ -86,7 +86,7 @@
 
   <!-- android -->
   <platform name="android">
-    <framework src="androidx.health.connect:connect-client:1.1.0-alpha10" />
+    <framework src="androidx.health.connect:connect-client:1.2.0-alpha06" />
     <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
     <config-file target="AndroidManifest.xml" parent="/*">
