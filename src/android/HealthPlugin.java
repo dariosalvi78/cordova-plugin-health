@@ -43,6 +43,7 @@ import androidx.health.connect.client.records.RestingHeartRateRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
+import androidx.health.connect.client.records.Vo2MaxRecord;
 import androidx.health.connect.client.records.WeightRecord;
 import androidx.health.connect.client.records.metadata.DataOrigin;
 import androidx.health.connect.client.records.metadata.Device;
@@ -611,6 +612,8 @@ public class HealthPlugin extends CordovaPlugin {
                         MenstruationFlowFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof MenstruationPeriodRecord) {
                         MenstruationPeriodFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof Vo2MaxRecord) {
+                        Vo2MaxFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1151,6 +1154,8 @@ public class HealthPlugin extends CordovaPlugin {
                 MenstruationFlowFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("menstruation_period")) {
                 MenstruationPeriodFunctions.prepareStoreRecords(st, et, data);
+            } else if (datatype.equalsIgnoreCase("vo2max")) {
+                Vo2MaxFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;

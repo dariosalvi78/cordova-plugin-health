@@ -161,6 +161,8 @@
       target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/MenstruationPeriodFunctions.java"
       target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/Vo2MaxFunctions.java"
+      target-dir="src/org/apache/cordova/health/" />
 
     <source-file src="src/android/PermissionsRationaleActivity.java"
       target-dir="src/org/apache/cordova/health/" />
