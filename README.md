@@ -38,20 +38,20 @@ cordova plugin add cordova-plugin-health --variable HEALTH_READ_PERMISSION='App 
 ## Android requirements
 
 * HealthConnect is made standard on (Google versions of) Android [from version 14 (API level 34)](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-1). On older versions of Android, the user has to install the Health Connect app from the Play Store. Be aware that the Health Connect app is only compatible with Android 9 (API level 28) or higher see [this](https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#step-2).
-* Health Connect SDK used here (v 1.2.0-alpha06) needs to target Android 15 (API level 35) and the minimum SDK level should be 26. Also Gradle and Android Gradle Plugin (AGP) should be recent, versions 8.14.2 for Gradle and 8.10.1 for the Android Plugin work.
+* Health Connect SDK used here (v 1.2.0-alpha06) needs to target Android 15 (API level 35) and the minimum SDK level should be 26. Also Gradle and Android Gradle Plugin (AGP) should be recent, versions 9.3.1 for Gradle and 9.1.0 for the Android Plugin work.
 As the latest version of cordova Android usually use older versions, it is necessary to configure those more updated versions in to the config.xml of your cordova app project. For example (valid for cordova-android 15.0.x):
 ```xml
 <platform name="android">
   ...
   <preference name="android-minSdkVersion" value="26" />
-  <preference name="android-targetSdkVersion" value="36" />
-  <preference name="GradleVersion" value="8.14.2" />
-  <preference name="AndroidGradlePluginVersion" value="8.10.1" />
+  <preference name="android-targetSdkVersion" value="37" />
+  <preference name="GradleVersion" value="9.3.1" />
+  <preference name="AndroidGradlePluginVersion" value="9.1.0" />
   ...
 <platform>
 ```
 Additionally, there are issues with some kotlin depenendencies which are fixed automatically by the plugin in `src/android/build-extras.gradle`. All these hacks will hopefully be removed with future versions of the cordova-android platform.
-* Download a recent version of gradle (8.14 or later).
+* Download a recent version of gradle (9.3.1 or later).
 * If you use Android Studio, download at least version Hedgehog.
 * Be aware that Health Connect requires the user to have screen lock enabled with a PIN, pattern, or password.
 * When publishing the app, you need to comply to [these requests from Google](https://developer.android.com/health-and-fitness/guides/health-connect/publish/request-access).
@@ -130,7 +130,7 @@ classpath 'com.android.tools.build:gradle:8.6.0'
 6. modify the variables.gradle file, particularly:
 ```gradle
 minSdkVersion = 26
-targetSdkVersion = 35
+targetSdkVersion = 37
 compileSdkVersion = 35
 ```
 
