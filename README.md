@@ -158,10 +158,10 @@ These are currently supported in both Android and iOS. Please notice that older 
 | heart_rate             | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
 | heart_rate.resting     | bpm | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
 | heart_rate.variability | bpm | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                   |
-| oxygenSaturation       | %.  |  | OxygenSaturationRecord                   |
 | workout_route          | bpm   | HKWorkoutRouteType                            | NA                                       |
 | blood_glucose          | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
+| oxygen_saturation      | %   | XXX | OxygenSaturationRecord                   |
 | mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
 | nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
@@ -210,6 +210,7 @@ Example values:
 | heart_rate.variability | 25                        |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, [multiply by `18.01559`](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' / 'fasting_' (Android only) + 'meal' (iOS only) / 'breakfast' / 'dinner' / 'lunch' / 'snack' / 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | blood_pressure | { systolic: 110, diastolic: 70, body_position: 'reclining', location: 'left_wrist' } >**Notes**: body_position can be 'standing_up', 'sitting_down', 'lying_down', 'reclining' and location can be 'left_wrist', 'right_wrist', 'left_upper_arm', 'right_upper_arm'. These two are only available in Android |
+| oxygen_saturation     | 98                                |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |

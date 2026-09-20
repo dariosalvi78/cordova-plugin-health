@@ -34,6 +34,7 @@ import androidx.health.connect.client.records.HeartRateRecord;
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord;
 import androidx.health.connect.client.records.HeightRecord;
 import androidx.health.connect.client.records.HydrationRecord;
+import androidx.health.connect.client.records.OxygenSaturationRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.RestingHeartRateRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
@@ -326,6 +327,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("heart_rate")) {
             return HeartRateFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("oxygen_saturation")) {
+            return OxygenSaturationFunctions.dataTypeToClass();
+        }
 
         return null;
     }
@@ -587,6 +591,8 @@ public class HealthPlugin extends CordovaPlugin {
                         HeartRateFunctions.populateRestingFromQuery(datapoint, obj);
                     } else if (datapoint instanceof HeartRateVariabilityRmssdRecord) {
                         HeartRateFunctions.populateVariabilityFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof OxygenSaturationRecord) {
+                        OxygenSaturationFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1119,6 +1125,8 @@ public class HealthPlugin extends CordovaPlugin {
                 HydrationFunctions.prepareStoreRecords(args.getJSONObject(0), data);
             } else if (datatype.toLowerCase().startsWith("nutrition.")) {
                 NutritionXFunctions.prepareStoreRecords(datatype, args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("oxygen_saturation")) {
+                OxygenSaturationFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
