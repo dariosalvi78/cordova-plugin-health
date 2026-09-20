@@ -156,14 +156,15 @@ These are currently supported in both Android and iOS. Please notice that older 
 | calories.basal         | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories               | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
 | heart_rate             | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
-| heart_rate.resting     | bpm | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
-| heart_rate.variability | bpm | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                   |
+| heart_rate.resting     | bpm   | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
+| heart_rate.variability | bpm   | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                   |
 | workout_route          | bpm   | HKWorkoutRouteType                            | NA                                       |
 | blood_glucose          | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
-| oxygen_saturation      | %   | XXX | OxygenSaturationRecord                   |
-| basal_body_temperature | C   | XXX | BasalBodyTemperatureRecord                   |
-| menstruation_flow | flow   | XXX | MenstruationFlowRecord                   |
+| oxygen_saturation      | %     | XXX | OxygenSaturationRecord                   |
+| basal_body_temperature | C     | XXX | BasalBodyTemperatureRecord                   |
+| menstruation_flow      | flow  | XXX | MenstruationFlowRecord                   |
+| menstruation_period    | NA    | NA | MenstruationPeriodRecord                   |
 | mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
 | nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
@@ -215,6 +216,7 @@ Example values:
 | oxygen_saturation  | 98                             |
 | basal_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
 | menstruation_flow | "unknown", "light", "medium" or "heavy" |
+| menstruation_period | **Notes**: only available on Android, only tracks start and end time  |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |

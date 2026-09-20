@@ -25,6 +25,7 @@ import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BloodPressureRecord;
 import androidx.health.connect.client.records.MenstruationFlowRecord;
+import androidx.health.connect.client.records.MenstruationPeriodRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.DistanceRecord;
@@ -338,6 +339,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("menstruation_flow")) {
             return MenstruationFlowFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("menstruation_period")) {
+            return MenstruationPeriodFunctions.dataTypeToClass();
+        }
 
         return null;
     }
@@ -605,6 +609,8 @@ public class HealthPlugin extends CordovaPlugin {
                         BasalTemperatureFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof MenstruationFlowRecord) {
                         MenstruationFlowFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof MenstruationPeriodRecord) {
+                        MenstruationPeriodFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1143,6 +1149,8 @@ public class HealthPlugin extends CordovaPlugin {
                 BasalTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("menstruation_flow")) {
                 MenstruationFlowFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("menstruation_period")) {
+                MenstruationPeriodFunctions.prepareStoreRecords(st, et, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
