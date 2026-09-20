@@ -157,6 +157,8 @@
       target-dir="src/org/apache/cordova/health/" />
     <source-file src="src/android/BasalTemperatureFunctions.java"
       target-dir="src/org/apache/cordova/health/" />
+    <source-file src="src/android/MenstruationFlowFunctions.java"
+      target-dir="src/org/apache/cordova/health/" />
 
     <source-file src="src/android/PermissionsRationaleActivity.java"
       target-dir="src/org/apache/cordova/health/" />

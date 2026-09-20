@@ -24,6 +24,7 @@ import androidx.health.connect.client.records.BasalBodyTemperatureRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BloodPressureRecord;
+import androidx.health.connect.client.records.MenstruationFlowRecord;
 import androidx.health.connect.client.records.NutritionRecord;
 import androidx.health.connect.client.records.BodyFatRecord;
 import androidx.health.connect.client.records.DistanceRecord;
@@ -334,6 +335,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("basal_body_temperature")) {
             return BasalTemperatureFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("menstruation_flow")) {
+            return MenstruationFlowFunctions.dataTypeToClass();
+        }
 
         return null;
     }
@@ -599,6 +603,8 @@ public class HealthPlugin extends CordovaPlugin {
                         OxygenSaturationFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof BasalBodyTemperatureRecord) {
                         BasalTemperatureFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof MenstruationFlowRecord) {
+                        MenstruationFlowFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1134,7 +1140,9 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.equalsIgnoreCase("oxygen_saturation")) {
                 OxygenSaturationFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("basal_body_temperature")) {
-                OxygenSaturationFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+                BasalTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("menstruation_flow")) {
+                MenstruationFlowFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;

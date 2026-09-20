@@ -51,7 +51,7 @@ As the latest version of cordova Android usually use older versions, it is neces
 <platform>
 ```
 Additionally, there are issues with some kotlin depenendencies which are fixed automatically by the plugin in `src/android/build-extras.gradle`. All these hacks will hopefully be removed with future versions of the cordova-android platform.
-* Download a recent version of gradle (8.7 or later).
+* Download a recent version of gradle (8.14 or later).
 * If you use Android Studio, download at least version Hedgehog.
 * Be aware that Health Connect requires the user to have screen lock enabled with a PIN, pattern, or password.
 * When publishing the app, you need to comply to [these requests from Google](https://developer.android.com/health-and-fitness/guides/health-connect/publish/request-access).
@@ -163,6 +163,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
 | oxygen_saturation      | %   | XXX | OxygenSaturationRecord                   |
 | basal_body_temperature | C   | XXX | BasalBodyTemperatureRecord                   |
+| menstruation_flow | flow   | XXX | MenstruationFlowRecord                   |
 | mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
 | nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
@@ -211,8 +212,9 @@ Example values:
 | heart_rate.variability | 25                        |
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, [multiply by `18.01559`](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' / 'fasting_' (Android only) + 'meal' (iOS only) / 'breakfast' / 'dinner' / 'lunch' / 'snack' / 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | blood_pressure | { systolic: 110, diastolic: 70, body_position: 'reclining', location: 'left_wrist' } >**Notes**: body_position can be 'standing_up', 'sitting_down', 'lying_down', 'reclining' and location can be 'left_wrist', 'right_wrist', 'left_upper_arm', 'right_upper_arm'. These two are only available in Android |
-| oxygen_saturation     | 98                                |
+| oxygen_saturation  | 98                             |
 | basal_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
+| menstruation_flow | "unknown", "light", "medium" or "heavy" |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |

@@ -5,6 +5,7 @@ Log of changes
 
 * added oxygen saturation on Android
 * added basal body temperature on Android
+* added menstruation flow on Android
 
 ### v3.2.4
 
