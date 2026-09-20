@@ -199,10 +199,11 @@ public class SleepFunctions {
             SleepSessionRecord sleepSession = new SleepSessionRecord(
                     Instant.ofEpochMilli(sessionStart), null,
                     Instant.ofEpochMilli(sessionEnd), null,
+                    Metadata.unknownRecordingMethod(),
                     null,
                     null,
-                    stages,
-                    Metadata.EMPTY
+                    stages
+
             );
             data.add(sleepSession);
 
@@ -230,10 +231,11 @@ public class SleepFunctions {
             SleepSessionRecord sleepSession = new SleepSessionRecord(
                     Instant.ofEpochMilli(stageST), null,
                     Instant.ofEpochMilli(stageET), null,
+                    Metadata.unknownRecordingMethod(),
                     null,
                     null,
-                    stages,
-                    Metadata.EMPTY
+                    stages
+
             );
             data.add(sleepSession);
         }

@@ -36,7 +36,7 @@ public class OxygenSaturationFunctions {
         OxygenSaturationRecord record = new OxygenSaturationRecord(
                 Instant.ofEpochMilli(st), null,
                 new Percentage(perc),
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }

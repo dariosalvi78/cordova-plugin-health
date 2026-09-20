@@ -88,7 +88,7 @@ public class HydrationFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 vol,
-                Metadata.EMPTY);
+                Metadata.unknownRecordingMethod());
         data.add(record);
     }
 }

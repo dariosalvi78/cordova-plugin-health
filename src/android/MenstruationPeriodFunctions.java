@@ -29,7 +29,7 @@ public class MenstruationPeriodFunctions {
         MenstruationPeriodRecord record = new MenstruationPeriodRecord(
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }

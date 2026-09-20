@@ -75,7 +75,7 @@ public class StairsFunctions {
                 Instant.ofEpochMilli(st), null,
                 Instant.ofEpochMilli(et), null,
                 floors,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }

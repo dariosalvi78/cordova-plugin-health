@@ -90,7 +90,7 @@ public class WeightFunctions {
         WeightRecord record = new WeightRecord(
                 Instant.ofEpochMilli(st), null,
                 Mass.kilograms(kgs),
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod()
         );
         data.add(record);
     }

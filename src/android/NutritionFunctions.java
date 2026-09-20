@@ -206,6 +206,7 @@ public class NutritionFunctions {
                 null,
                 Instant.ofEpochMilli(et),
                 null,
+                Metadata.unknownRecordingMethod(),
                 null,
                 null,
                 null,
@@ -249,8 +250,7 @@ public class NutritionFunctions {
                 null,
                 null,
                 name,
-                mealType,
-                Metadata.EMPTY);
+                mealType);
         data.add(record);
     }
 

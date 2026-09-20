@@ -1,12 +1,13 @@
 Log of changes
 ==============
 
-### v3.2.5
+### v3.3.0
 
 * added oxygen saturation on Android
 * added basal body temperature on Android
 * added menstruation flow and period on Android
 * added vo2max on Android
+* updated dependencies and refactoring of code
 
 ### v3.2.4
 

@@ -53,9 +53,9 @@ public class BasalTemperatureFunctions {
 
         BasalBodyTemperatureRecord record = new BasalBodyTemperatureRecord(
                 Instant.ofEpochMilli(st), null,
+                Metadata.unknownRecordingMethod(),
                 Temperature.celsius(celsius),
-                location,
-                Metadata.EMPTY
+                location
         );
         data.add(record);
     }

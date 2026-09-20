@@ -65,8 +65,8 @@ public class MenstruationFlowFunctions {
         int flowInt = flowStringToInt(flowEnum);
         MenstruationFlowRecord record = new MenstruationFlowRecord(
                 Instant.ofEpochMilli(st), null,
-                flowInt,
-                Metadata.EMPTY
+                Metadata.unknownRecordingMethod(),
+                flowInt
         );
         data.add(record);
     }
