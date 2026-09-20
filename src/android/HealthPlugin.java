@@ -343,6 +343,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("menstruation_period")) {
             return MenstruationPeriodFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("vo2max")) {
+            return Vo2MaxFunctions.dataTypeToClass();
+        }
 
         return null;
     }
