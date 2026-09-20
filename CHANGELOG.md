@@ -4,6 +4,8 @@ Log of changes
 ### v3.2.5
 
 * added oxygen saturation on Android
+* added basal body temperature on Android
+
 ### v3.2.4
 
 * added aggregated heart rate and variants

@@ -20,6 +20,7 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByDurati
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
+import androidx.health.connect.client.records.BasalBodyTemperatureRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BloodPressureRecord;
@@ -113,8 +114,8 @@ public class HealthPlugin extends CordovaPlugin {
     }
 
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
+    public void pluginInitialize() {
+        super.pluginInitialize();
 
         ActivityResultContract<Set<String>, Set<String>> requestPermissionActivityContract = PermissionController
                 .createRequestPermissionResultContract();
@@ -329,6 +330,9 @@ public class HealthPlugin extends CordovaPlugin {
         }
         if (name.equalsIgnoreCase("oxygen_saturation")) {
             return OxygenSaturationFunctions.dataTypeToClass();
+        }
+        if (name.equalsIgnoreCase("basal_body_temperature")) {
+            return BasalTemperatureFunctions.dataTypeToClass();
         }
 
         return null;
@@ -593,6 +597,8 @@ public class HealthPlugin extends CordovaPlugin {
                         HeartRateFunctions.populateVariabilityFromQuery(datapoint, obj);
                     } else if (datapoint instanceof OxygenSaturationRecord) {
                         OxygenSaturationFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof BasalBodyTemperatureRecord) {
+                        BasalTemperatureFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1126,6 +1132,8 @@ public class HealthPlugin extends CordovaPlugin {
             } else if (datatype.toLowerCase().startsWith("nutrition.")) {
                 NutritionXFunctions.prepareStoreRecords(datatype, args.getJSONObject(0), st, et, data);
             } else if (datatype.equalsIgnoreCase("oxygen_saturation")) {
+                OxygenSaturationFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("basal_body_temperature")) {
                 OxygenSaturationFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);

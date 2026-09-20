@@ -162,6 +162,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | blood_glucose          | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
 | oxygen_saturation      | %   | XXX | OxygenSaturationRecord                   |
+| basal_body_temperature | C   | XXX | BasalBodyTemperatureRecord                   |
 | mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
 | nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
@@ -211,6 +212,7 @@ Example values:
 | blood_glucose  | { glucose: 5.5, meal: 'breakfast', sleep: 'fully_awake', source: 'capillary_blood' }<br />**Notes**: to convert to mg/dL, [multiply by `18.01559`](http://www.convertunits.com/molarmass/Glucose)). `meal` can be: 'before_' / 'after_' / 'fasting_' (Android only) + 'meal' (iOS only) / 'breakfast' / 'dinner' / 'lunch' / 'snack' / 'unknown'. `sleep` can be (iOS only): 'fully_awake', 'before_sleep', 'on_waking', 'during_sleep'. `source` can be: 'capillary_blood' ,'interstitial_fluid', 'plasma', 'serum', 'tears', whole_blood', 'unknown'|
 | blood_pressure | { systolic: 110, diastolic: 70, body_position: 'reclining', location: 'left_wrist' } >**Notes**: body_position can be 'standing_up', 'sitting_down', 'lying_down', 'reclining' and location can be 'left_wrist', 'right_wrist', 'left_upper_arm', 'right_upper_arm'. These two are only available in Android |
 | oxygen_saturation     | 98                                |
+| basal_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
 | nutrition.X | 234.9 <br/>**Notes**: for the unit, see the coresponding type in the table above |
@@ -464,6 +466,7 @@ cordova.plugins.health.store({
 - In Android, you can only store basal rate, that is a power. This is estimated from the kcals provided as an argument, divided by the time between the start and end time. When you query the individual sample, you get the kcal/day back, not the kcal, unless you do an aggregated query.
 - When storing `heart_rate`, you can also provide the value as an array of [ {bpm: 81, timestamp: Date }, ... ]. This is how the heart rate is actually stored internally and is probably more efficient.
 - `sleep` in HealthConnect is stored in sessions composed of stages. By default, this function will store each stage as an indipendent session, but if you want to aggregate the stages into a single session, use the flag: `sleepSession: true` and use an array of objects like `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]` where each object is a stage, as value.
+- when storing `basal_body_temperature` on Android it is possible to specify the location following [this enumeration](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation).
 - `nutrition` in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
 - `nutrition.water` is treated separately in Android than the other nutrients, and cannot be associated to a specific food item. This also means that you cannot add it to a `nutrition` item, nor will you find it when querying `nutrition`.
 
