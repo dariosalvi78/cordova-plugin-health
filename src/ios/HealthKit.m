@@ -63,6 +63,8 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 
 - (HKCorrelation *)loadHKCorrelationFromInputDictionary:(NSDictionary *)inputDictionary error:(NSError **)error;
 
++ (NSDictionary *)normalizeMetadata:(NSDictionary *)metadata;
+
 + (HKQuantitySample *)getHKQuantitySampleWithStartDate:(NSDate *)startDate endDate:(NSDate *)endDate sampleTypeString:(NSString *)sampleTypeString unitTypeString:(NSString *)unitTypeString value:(double)value metadata:(NSDictionary *)metadata error:(NSError **)error;
 
 - (HKCorrelation *)getHKCorrelationWithStartDate:(NSDate *)startDate endDate:(NSDate *)endDate correlationTypeString:(NSString *)correlationTypeString objects:(NSSet *)objects metadata:(NSDictionary *)metadata error:(NSError **)error;
@@ -125,6 +127,41 @@ static NSString *const HKPluginKeyUUID = @"UUID";
 #pragma mark Internal Helpers
 
 @implementation HealthKit (InternalHelpers)
+
+/**
+ * The JS bridge can only send plain string keys, but several HKMetadataKey* constants
+ * (e.g. HKMetadataKeyMenstrualCycleStart) do not necessarily equal their symbol name at
+ * runtime. Remap the plugin-facing key names to the real SDK constants so HealthKit's
+ * required-metadata checks actually see them.
+ *
+ * @param metadata  *NSDictionary
+ * @return          *NSDictionary
+ */
++ (NSDictionary *)normalizeMetadata:(NSDictionary *)metadata {
+    if (metadata.count == 0) {
+        return metadata;
+    }
+
+    static NSDictionary<NSString *, NSString *> *keyMap = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        keyMap = @{
+            @"HKMetadataKeyMenstrualCycleStart": HKMetadataKeyMenstrualCycleStart,
+            @"HKMetadataKeyWasUserEntered": HKMetadataKeyWasUserEntered,
+            @"HKMetadataKeyBloodGlucoseMealTime": HKMetadataKeyBloodGlucoseMealTime,
+        };
+    });
+
+    NSMutableDictionary *normalized = [metadata mutableCopy];
+    [keyMap enumerateKeysAndObjectsUsingBlock:^(NSString *jsKey, NSString *realKey, BOOL *stop) {
+        if (normalized[jsKey] != nil && ![jsKey isEqualToString:realKey]) {
+            normalized[realKey] = normalized[jsKey];
+            [normalized removeObjectForKey:jsKey];
+        }
+    }];
+
+    return normalized;
+}
 
 /**
  * Get a string representation of an NSDate object
@@ -254,7 +291,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
     NSString *sampleTypeString = inputDictionary[HKPluginKeySampleType];
 
     //Load optional metadata key
-    NSDictionary *metadata = inputDictionary[HKPluginKeyMetadata];
+    NSDictionary *metadata = [HealthKit normalizeMetadata:inputDictionary[HKPluginKeyMetadata]];
     if (metadata == nil) {
       metadata = @{};
     }
@@ -310,7 +347,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         [objects addObject:sample];
     }
 
-    NSDictionary *metadata = inputDictionary[HKPluginKeyMetadata];
+    NSDictionary *metadata = [HealthKit normalizeMetadata:inputDictionary[HKPluginKeyMetadata]];
     if (metadata == nil) {
         metadata = @{};
     }
@@ -402,7 +439,7 @@ static NSString *const HKPluginKeyUUID = @"UUID";
         return nil;
     }
 
-    return [HKCategorySample categorySampleWithType:type value:[value integerValue] startDate:startDate endDate:endDate];
+    return [HKCategorySample categorySampleWithType:type value:[value integerValue] startDate:startDate endDate:endDate metadata:metadata];
 }
 
 - (NSNumber*) getCategoryValueByName:(NSString *) categoryValue type:(HKCategoryType*) type {
