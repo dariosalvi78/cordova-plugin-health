@@ -165,7 +165,8 @@ These are currently supported in both Android and iOS. Please notice that older 
 | oxygen_saturation      | %     | HKQuantityTypeIdentifierOxygenSaturation      | OxygenSaturationRecord                   |
 | vo2max                 | mL/kg/min | HKQuantityTypeIdentifierVO2Max            | Vo2MaxRecord                             |
 | basal_body_temperature | C     | HKQuantityTypeIdentifierBasalBodyTemperature  | BasalBodyTemperatureRecord               |
-| core_body_temperature  | C     | HKQuantityTypeIdentifierBodyTemperature       | XXX               |
+| core_body_temperature  | C     | HKQuantityTypeIdentifierBodyTemperature       | BodyTemperatureRecord                    |
+| skin_temperature       | C     | NA                                            | SkinTemperatureRecord                    |
 | apple_sleep_skin_temperature  | C | HKQuantityTypeIdentifierAppleSleepingWristTemperature | NA                            |
 | menstruation_flow      | flow  | HKCategoryTypeIdentifierMenstrualFlow         | MenstruationFlowRecord                   |
 | menstruation_period    | NA    | NA                                            | MenstruationPeriodRecord                 |
@@ -222,6 +223,7 @@ Example values:
 | vo2max         | 40.2 <br/>**Notes**: on Android, it is possible to also specify a `method` which can be 'metabolic_chart', 'heart_rate_ratio', 'cooper_test', 'multistage_fintess_test', 'rockport_fintess_test', 'other' |
 | basal_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
 | core_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
+| skin_temperature | { baseline: 36.4, deltas: [{time: UNIXTIMESTAMP, temperatureDelta: 1}, {time: UNIXTIMESTAMP, temperatureDelta: 0.2}]} <br />**Notes**: Android only  |
 | apple_sleep_skin_temperature | 36 <br />**Notes**: iOS only and read-only  |
 | menstruation_flow | "unknown", "light", "medium" or "heavy" <br/>**Notes**: `followsFlowInPeriod` can be present set to `true` in the flow records following the first one belonging to the same period |
 | menstruation_period | **Notes**: only available on Android, only tracks start and end time  |

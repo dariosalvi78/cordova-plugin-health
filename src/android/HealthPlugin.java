@@ -24,6 +24,7 @@ import androidx.health.connect.client.records.BasalBodyTemperatureRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
 import androidx.health.connect.client.records.BloodPressureRecord;
+import androidx.health.connect.client.records.BodyTemperatureRecord;
 import androidx.health.connect.client.records.MenstruationFlowRecord;
 import androidx.health.connect.client.records.MenstruationPeriodRecord;
 import androidx.health.connect.client.records.NutritionRecord;
@@ -40,6 +41,7 @@ import androidx.health.connect.client.records.HydrationRecord;
 import androidx.health.connect.client.records.OxygenSaturationRecord;
 import androidx.health.connect.client.records.Record;
 import androidx.health.connect.client.records.RestingHeartRateRecord;
+import androidx.health.connect.client.records.SkinTemperatureRecord;
 import androidx.health.connect.client.records.SleepSessionRecord;
 import androidx.health.connect.client.records.StepsRecord;
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord;
@@ -346,6 +348,12 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("vo2max")) {
             return Vo2MaxFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("skin_temperature")) {
+            return Vo2MaxFunctions.dataTypeToClass();
+        }
+        if (name.equalsIgnoreCase("core_body_temperature")) {
+            return Vo2MaxFunctions.dataTypeToClass();
+        }
 
         return null;
     }
@@ -617,6 +625,10 @@ public class HealthPlugin extends CordovaPlugin {
                         MenstruationPeriodFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof Vo2MaxRecord) {
                         Vo2MaxFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof BodyTemperatureRecord) {
+                        BodyTemperatureFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof SkinTemperatureRecord) {
+                        SkinTemperatureFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -1154,6 +1166,10 @@ public class HealthPlugin extends CordovaPlugin {
                 MenstruationPeriodFunctions.prepareStoreRecords(st, et, data);
             } else if (datatype.equalsIgnoreCase("vo2max")) {
                 Vo2MaxFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("core_body_temperature")) {
+                BodyTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
+            } else if (datatype.equalsIgnoreCase("skin_temperature")) {
+                SkinTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;
