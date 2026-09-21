@@ -152,7 +152,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | activity               | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
 | appleExerciseTime      | min   | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
 | sleep                  | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
-| appleSleepingBreathingDisturbances | count | HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances | NA              |
+| apple_sleeping_breathing_disturbances | count | HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances | NA           |
 | calories.active        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal         | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories               | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |

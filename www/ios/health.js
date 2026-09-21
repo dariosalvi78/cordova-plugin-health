@@ -52,7 +52,7 @@ dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
 dataTypes['basal_body_temperature'] = 'HKQuantityTypeIdentifierBasalBodyTemperature';
 dataTypes['core_body_temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
 dataTypes['apple_sleep_skin_temperature'] = 'HKQuantityTypeIdentifierAppleSleepingWristTemperature';
-dataTypes['appleSleepingBreathingDisturbances'] = 'HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances';
+dataTypes['apple_sleeping_breathing_disturbances'] = 'HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances';
 dataTypes['UVexposure'] = 'HKQuantityTypeIdentifierUVExposure';
 dataTypes['menstruation_flow'] = 'HKCategoryTypeIdentifierMenstrualFlow';
 
@@ -102,7 +102,7 @@ units['vo2max'] = 'ml/(kg*min)';
 units['basal_body_temperature'] = 'degC';
 units['core_body_temperature'] = 'degC';
 units['apple_sleep_skin_temperature'] = 'degC';
-units['appleSleepingBreathingDisturbances'] = 'count';
+units['apple_sleeping_breathing_disturbances'] = 'count';
 units['UVexposure'] = 'count';
 
 // just a wrapper for querying Telerik's if HK is available

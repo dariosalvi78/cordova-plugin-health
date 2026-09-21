@@ -5,9 +5,11 @@ Log of changes
 
 * added oxygen saturation
 * added basal body temperature
+* added core body temperature
+* added Apple wrist temperature on iOS
 * added menstruation flow and period
 * added vo2max
-* added appleSleepingBreathingDisturbances on iOS
+* added Apple sleeping breathing disturbances on iOS
 * updated dependencies and refactoring of code
 
 ### v3.2.4
