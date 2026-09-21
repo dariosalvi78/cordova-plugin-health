@@ -50,6 +50,7 @@ dataTypes['resp_rate'] = 'HKQuantityTypeIdentifierRespiratoryRate';
 dataTypes['oxygen_saturation'] = 'HKQuantityTypeIdentifierOxygenSaturation';
 dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
 dataTypes['basal_body_temperature'] = 'HKQuantityTypeIdentifierBasalBodyTemperature';
+dataTypes['core_body_temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
 dataTypes['UVexposure'] = 'HKQuantityTypeIdentifierUVExposure';
 dataTypes['appleSleepingBreathingDisturbances'] = 'HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances';
 dataTypes['menstruation_flow'] = 'HKCategoryTypeIdentifierMenstrualFlow';
@@ -98,6 +99,7 @@ units['resp_rate'] = 'count/min';
 units['oxygen_saturation'] = '%';
 units['vo2max'] = 'ml/(kg*min)';
 units['basal_body_temperature'] = 'degC';
+units['core_body_temperature'] = 'degC';
 units['UVexposure'] = 'count';
 units['appleSleepingBreathingDisturbances'] = 'count';
 
