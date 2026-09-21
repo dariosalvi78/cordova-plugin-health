@@ -453,6 +453,13 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                 @"HKCategoryValueSleepAnalysisAsleepCore":@(HKCategoryValueSleepAnalysisAsleepCore),
                 @"HKCategoryValueSleepAnalysisAsleepDeep":@(HKCategoryValueSleepAnalysisAsleepDeep),
                 @"HKCategoryValueSleepAnalysisAsleepREM":@(HKCategoryValueSleepAnalysisAsleepREM)
+            },
+            @"HKCategoryTypeIdentifierMenstrualFlow":@{
+                @"HKCategoryValueMenstrualFlowUnspecified":@(HKCategoryValueMenstrualFlowUnspecified),
+                @"HKCategoryValueMenstrualFlowLight":@(HKCategoryValueMenstrualFlowLight),
+                @"HKCategoryValueMenstrualFlowMedium":@(HKCategoryValueMenstrualFlowMedium),
+                @"HKCategoryValueMenstrualFlowHeavy":@(HKCategoryValueMenstrualFlowHeavy),
+                @"HKCategoryValueMenstrualFlowNone":@(HKCategoryValueMenstrualFlowNone)
             }
         };
     } else {
@@ -461,6 +468,13 @@ static NSString *const HKPluginKeyUUID = @"UUID";
                 @"HKCategoryValueSleepAnalysisInBed":@(HKCategoryValueSleepAnalysisInBed),
                 @"HKCategoryValueSleepAnalysisAsleep":@(HKCategoryValueSleepAnalysisAsleep),
                 @"HKCategoryValueSleepAnalysisAwake":@(HKCategoryValueSleepAnalysisAwake),
+                            },
+                            @"HKCategoryTypeIdentifierMenstrualFlow":@{
+                @"HKCategoryValueMenstrualFlowUnspecified":@(HKCategoryValueMenstrualFlowUnspecified),
+                @"HKCategoryValueMenstrualFlowLight":@(HKCategoryValueMenstrualFlowLight),
+                @"HKCategoryValueMenstrualFlowMedium":@(HKCategoryValueMenstrualFlowMedium),
+                @"HKCategoryValueMenstrualFlowHeavy":@(HKCategoryValueMenstrualFlowHeavy),
+                @"HKCategoryValueMenstrualFlowNone":@(HKCategoryValueMenstrualFlowNone)
             }
         };
     }
