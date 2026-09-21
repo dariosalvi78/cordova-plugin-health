@@ -51,8 +51,9 @@ dataTypes['oxygen_saturation'] = 'HKQuantityTypeIdentifierOxygenSaturation';
 dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
 dataTypes['basal_body_temperature'] = 'HKQuantityTypeIdentifierBasalBodyTemperature';
 dataTypes['core_body_temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
-dataTypes['UVexposure'] = 'HKQuantityTypeIdentifierUVExposure';
+dataTypes['apple_sleep_skin_temperature'] = 'HKQuantityTypeIdentifierAppleSleepingWristTemperature';
 dataTypes['appleSleepingBreathingDisturbances'] = 'HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances';
+dataTypes['UVexposure'] = 'HKQuantityTypeIdentifierUVExposure';
 dataTypes['menstruation_flow'] = 'HKCategoryTypeIdentifierMenstrualFlow';
 
 // for parseable units in HK, see https://developer.apple.com/documentation/healthkit/hkunit/1615733-unitfromstring?language=objc
@@ -100,8 +101,9 @@ units['oxygen_saturation'] = '%';
 units['vo2max'] = 'ml/(kg*min)';
 units['basal_body_temperature'] = 'degC';
 units['core_body_temperature'] = 'degC';
-units['UVexposure'] = 'count';
+units['apple_sleep_skin_temperature'] = 'degC';
 units['appleSleepingBreathingDisturbances'] = 'count';
+units['UVexposure'] = 'count';
 
 // just a wrapper for querying Telerik's if HK is available
 Health.prototype.isAvailable = function (success, error) {
