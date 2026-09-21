@@ -150,31 +150,33 @@ These are currently supported in both Android and iOS. Please notice that older 
 | stairs                 | count | HKQuantityTypeIdentifierFlightsClimbed        |   FloorsClimbedRecord                    |
 | distance               | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | activity               | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
-| appleExerciseTime      | min | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
+| appleExerciseTime      | min   | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
 | sleep                  | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
+| appleSleepingBreathingDisturbances | count | HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances | NA              |
 | calories.active        | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned    | ActiveCaloriesBurnedRecord               |
 | calories.basal         | kcal  | HKQuantityTypeIdentifierBasalEnergyBurned     | BasalMetabolicRateRecord * time window   |
 | calories               | kcal  | HKQuantityTypeIdentifierActiveEnergyBurned + HKQuantityTypeIdentifierBasalEnergyBurned | TotalCaloriesBurnedRecord |
 | heart_rate             | bpm   | HKQuantityTypeIdentifierHeartRate             | HeartRateRecord                          |
-| heart_rate.resting     | bpm   | HKQuantityTypeIdentifierRestingHeartRate     | HeartRateRecord                          |
-| heart_rate.variability | bpm   | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                   |
+| heart_rate.resting     | bpm   | HKQuantityTypeIdentifierRestingHeartRate      | HeartRateRecord                          |
+| heart_rate.variability | bpm   | HKQuantityTypeIdentifierHeartRateVariabilitySDNN | HeartRateRecord                       |
 | workout_route          | bpm   | HKWorkoutRouteType                            | NA                                       |
 | blood_glucose          | mmol/L | HKQuantityTypeIdentifierBloodGlucose         | BloodGlucoseRecord                       |
 | blood_pressure         | mmHg  | HKCorrelationTypeIdentifierBloodPressure      | BloodPressureRecord                      |
-| oxygen_saturation      | %     | XXX | OxygenSaturationRecord                   |
-| vo2max                 | mL/kg/min | XXX | Vo2MaxRecord                   |
-| basal_body_temperature | C     | XXX | BasalBodyTemperatureRecord                   |
-| menstruation_flow      | flow  | XXX | MenstruationFlowRecord                   |
-| menstruation_period    | NA    | NA | MenstruationPeriodRecord                   |
+| oxygen_saturation      | %     | HKQuantityTypeIdentifierOxygenSaturation      | OxygenSaturationRecord                   |
+| vo2max                 | mL/kg/min | HKQuantityTypeIdentifierVO2Max            | Vo2MaxRecord                             |
+| basal_body_temperature | C     | HKQuantityTypeIdentifierBasalBodyTemperature  | BasalBodyTemperatureRecord               |
+| menstruation_flow      | flow  | HKCategoryTypeIdentifierMenstrualFlow         | MenstruationFlowRecord                   |
+| menstruation_period    | NA    | NA                                            | MenstruationPeriodRecord                 |
 | mindfulness            | sec   | HKCategoryTypeIdentifierMindfulSession        | NA                                       |
 | UVexposure             | count | HKQuantityTypeIdentifierUVExposure            | NA                                       |
 | nutrition              | nutrition | HKCorrelationTypeIdentifierFood           | NutritionRecord                          |
-| nutrition.carbs.total  | g | HKQuantityTypeIdentifierDietaryCarbohydrates | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL |
-| nutrition.fat.total    | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL         |
-| nutrition.protein      | g   | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
-| nutrition.calories     | kcal | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL          |
-| nutrition.water        | ml    | HKQuantityTypeIdentifierDietaryWater          | HydrationRecord, TYPE_HYDRATION         |
-| nutrition.sugar        | g     | HKQuantityTypeIdentifierDietarySugar          | NutritionRecord, NUTRIENT_SUGAR           |
+| nutrition.carbs.total  | g | HKQuantityTypeIdentifierDietaryCarbohydrates     | NutritionRecord, TOTAL_CARBOHYDRATE_TOTAL |
+| nutrition.fat.total    | g | HKQuantityTypeIdentifierDietaryFatTotal       | NutritionRecord, TOTAL_FAT_TOTAL             |
+| nutrition.protein      | g     | HKQuantityTypeIdentifierDietaryProtein        | NutritionRecord, PROTEIN_TOTAL           |
+| nutrition.calories     | kcal  | HKQuantityTypeIdentifierDietaryEnergyConsumed | NutritionRecord, ENERGY_TOTAL            |
+| nutrition.water        | ml    | HKQuantityTypeIdentifierDietaryWater          | HydrationRecord, TYPE_HYDRATION          |
+| nutrition.sugar        | g     | HKQuantityTypeIdentifierDietarySugar          | NutritionRecord, NUTRIENT_SUGAR          |
+
 
 
 **Note**: units of measurement are fixed!
@@ -217,7 +219,7 @@ Example values:
 | oxygen_saturation | 98                             |
 | vo2max         | 40.2 <br/>**Notes**: on Android, it is possible to also specify a `method` which can be 'metabolic_chart', 'heart_rate_ratio', 'cooper_test', 'multistage_fintess_test', 'rockport_fintess_test', 'other' |
 | basal_body_temperature | 36 <br />**Notes**: on Android an additional 'location' property can be provided as an integer, mapped to [this enum](https://developer.android.com/reference/androidx/health/connect/client/records/BodyTemperatureMeasurementLocation)  |
-| menstruation_flow | "unknown", "light", "medium" or "heavy" |
+| menstruation_flow | "unknown", "light", "medium" or "heavy" <br/>**Notes**: `followsFlowInPeriod` can be present set to `true` in the flow records following the first one belonging to the same period |
 | menstruation_period | **Notes**: only available on Android, only tracks start and end time  |
 | mindfulness    | 1800 <br/>**Notes**: only available on iOS |
 | UVexposure     | 12 <br/>**Notes**: only available on iOS |
@@ -359,6 +361,7 @@ cordova.plugins.health.query({
 - successCallback: called if all OK, argument contains the result of the query in the form of an array of: { startDate: Date, endDate: Date, value: xxx, unit: 'xxx', sourceName: 'aaaa', sourceBundleId: 'bbbb' }
 - errorCallback: called if something went wrong, argument contains a textual description of the problem
 
+
 #### iOS quirks
 
 - HealthKit does not calculate active and basal calories - these must be input from an app
@@ -366,6 +369,7 @@ cordova.plugins.health.query({
 - When querying for activities, only events whose startDate and endDate are **both** in the query range will be returned.
 - When duration (in seconds) is returned, this may be different than the endTime - startTime and actually more accurate.
 - nutrition: vitamin_a is given in micrograms. Automatic conversion to international units is not trivial and depends on the actual substance (see [here](https://dietarysupplementdatabase.usda.nih.gov/ingredient_calculator/help.php#q9)).
+- Menstrual period tracking: iOS only has flow, no period. If multiple menstruation flows are associated to a single menstruation period, the flag `followsFlowInPeriod` should be set to `true` to the flow records following the first one.
 
 #### Android quirks
 
@@ -376,6 +380,8 @@ cordova.plugins.health.query({
 - Calories and distance for activities are actually queried indipendently, using the timestamps for each returned activity. This may considerably slow down the query if the returned activities are many. Use with care.
 - sleep in HealthConnect is stored in sessions composed of stages. If you want to retrieve sessions instead of single stages, add the following flag to the query object: `sleepSession: true`. The returned value will be an array of objects like: `[ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ... ]`
 - heart_rate is in reality stored as an array of values within a given window of time, however, each value is returned separately here to make the API compatible with iOS.
+- Menstrual period tracking: Android has separate quantities for period and menstrual flow, iOS only has flow.
+
 
 ### queryAggregated()
 
@@ -464,6 +470,9 @@ cordova.plugins.health.store({
 - When storing an activity, you can also specify calories (active, in kcal) and/or distance (in meters). For example: `dataType: 'activity', value: 'walking', calories: 20, distance: 520`. Distance is set as DistanceWalkingRunning unless an additional `cycling: true` is added to the object. Be aware that you need permission to write calories and distance first, or the call will fail.
 - In iOS you cannot store the total calories, you need to specify either basal or active. If you use total calories, the active ones will be stored.
 - In iOS distance is assumed to be of type WalkingRunning, if you want to explicitly set it to Cycling you need to add the field `cycling: true`.
+- Menstrual period tracking: iOS only has flow, no period. In order to specify a period, one has to record one or more flow records, with the start and end time coherenlty creating a period. If multiple menstruation flows are specified, the flag `followsFlowInPeriod` has to be set to true to the flow records following the first one.
+
+
 
 #### Android quirks
 
@@ -476,6 +485,8 @@ cordova.plugins.health.store({
 - when storing `vo2max` on Android, it is possible to also specify a `method` which can be 'metabolic_chart', 'heart_rate_ratio', 'cooper_test', 'multistage_fintess_test', 'rockport_fintess_test', 'other'
 - `nutrition` in Android is always associated to a specific food item. When storing a single nutrient, like nutrition.sugar, the plugin creates an empty food item with that nutrient. Use food items when possible.
 - `nutrition.water` is treated separately in Android than the other nutrients, and cannot be associated to a specific food item. This also means that you cannot add it to a `nutrition` item, nor will you find it when querying `nutrition`.
+- Menstrual period tracking: Android has separate quantities for period and menstrual flow, iOS only has flow. 
+
 
 ### delete()
 

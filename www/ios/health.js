@@ -49,10 +49,10 @@ dataTypes['blood_pressure_diastolic'] = 'HKQuantityTypeIdentifierBloodPressureDi
 dataTypes['resp_rate'] = 'HKQuantityTypeIdentifierRespiratoryRate';
 dataTypes['oxygen_saturation'] = 'HKQuantityTypeIdentifierOxygenSaturation';
 dataTypes['vo2max'] = 'HKQuantityTypeIdentifierVO2Max';
-dataTypes['temperature'] = 'HKQuantityTypeIdentifierBodyTemperature';
+dataTypes['basal_body_temperature'] = 'HKQuantityTypeIdentifierBasalBodyTemperature';
 dataTypes['UVexposure'] = 'HKQuantityTypeIdentifierUVExposure';
-
-
+dataTypes['appleSleepingBreathingDisturbances'] = 'HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances';
+dataTypes['menstruation_flow'] = 'HKCategoryTypeIdentifierMenstrualFlow';
 
 // for parseable units in HK, see https://developer.apple.com/documentation/healthkit/hkunit/1615733-unitfromstring?language=objc
 var units = [];
@@ -97,8 +97,9 @@ units['blood_pressure_diastolic'] = 'mmHg';
 units['resp_rate'] = 'count/min';
 units['oxygen_saturation'] = '%';
 units['vo2max'] = 'ml/(kg*min)';
-units['temperature'] = 'degC';
+units['basal_body_temperature'] = 'degC';
 units['UVexposure'] = 'count';
+units['appleSleepingBreathingDisturbances'] = 'count';
 
 // just a wrapper for querying Telerik's if HK is available
 Health.prototype.isAvailable = function (success, error) {
@@ -361,6 +362,27 @@ Health.prototype.query = function (opts, onSuccess, onError) {
                 break;
             }
             res.unit = 'sleep';
+          } else if (opts.dataType === 'menstruation_flow') {
+            let isFirst = samples[i].metadata.HKMetadataKeyMenstrualCycleStart;
+            res.followsFlowInPeriod = !isFirst;
+
+            switch (samples[i].value) {
+              case 1:
+                res.value = 'unspecified';
+                break;
+              case 2:
+                res.value = 'light';
+                break;
+              case 3:
+                res.value = 'medium';
+                break;
+              case 4:
+                res.value = 'heavy';
+                break;
+              default:
+                  res.value = 'unspecified';
+            }
+            res.unit = 'flow';
           } else {
             res.value = samples[i].quantity;
           }
@@ -588,6 +610,31 @@ Health.prototype.store = function (data, onSuccess, onError) {
       'amount': data.value.diastolic
     }];
     window.plugins.healthkit.saveCorrelation(data, onSuccess, onError);
+  } else if (data.dataType === 'menstruation_flow') {
+    data.sampleType = 'HKCategoryTypeIdentifierMenstrualFlow';
+
+    if (data.value === 'unspecified') {
+      data.value = 'HKCategoryValueMenstrualFlowUnspecified';
+    } else if (data.value === 'light') {
+      data.value = 'HKCategoryValueMenstrualFlowLight';
+    } else if (data.value === 'medium') {
+      data.value = 'HKCategoryValueMenstrualFlowMedium';
+    } else if (data.value === 'heavy') {
+      data.value = 'HKCategoryValueMenstrualFlowHeavy';
+    } else if (data.value === 'none') {
+      data.value = 'HKCategoryValueMenstrualFlowNone';
+    }
+
+    if (!data.metadata) data.metadata = {};
+
+    let isFirstInPeriod = true;
+    if (data.followsFlowInPeriod) {
+      isFirstInPeriod = false;
+    }
+    data.metadata.HKMetadataKeyMenstrualCycleStart = isFirstInPeriod;
+
+    window.plugins.healthkit.saveSample(data, onSuccess, onError);
+
   } else if (dataTypes[data.dataType]) {
     // generic case
     data.sampleType = dataTypes[data.dataType];
@@ -634,6 +681,8 @@ Health.prototype.delete = function (data, onSuccess, onError) {
     data.sampleType = 'workoutType';
   } else if ((data.dataType === 'distance') && data.cycling) {
     data.sampleType = 'HKQuantityTypeIdentifierDistanceCycling';
+  } else if (data.dataType === 'menstruation_flow') {
+    data.sampleType = 'HKCategoryTypeIdentifierMenstrualFlow';
   } else if (dataTypes[data.dataType]) {
     data.sampleType = dataTypes[data.dataType];
   } else {
