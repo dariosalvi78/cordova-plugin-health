@@ -687,6 +687,18 @@ Health.prototype.delete = function (data, onSuccess, onError) {
     data.sampleType = 'HKQuantityTypeIdentifierDistanceCycling';
   } else if (data.dataType === 'menstruation_flow') {
     data.sampleType = 'HKCategoryTypeIdentifierMenstrualFlow';
+  } else if (data.dataType === 'blood_pressure') {
+    // blood_pressure is a correlation type: HealthKit throws an uncaught
+    // NSException if you request authorization (which deleteSamples does
+    // internally) for a correlation type directly - it must be done via its
+    // constituent quantity types instead (same mapping getHKDataTypes() uses
+    // for requestAuthorization).
+    var systolicData = Object.assign({}, data, { sampleType: 'HKQuantityTypeIdentifierBloodPressureSystolic' });
+    var diastolicData = Object.assign({}, data, { sampleType: 'HKQuantityTypeIdentifierBloodPressureDiastolic' });
+    window.plugins.healthkit.deleteSamples(systolicData, function () {
+      window.plugins.healthkit.deleteSamples(diastolicData, onSuccess, onError);
+    }, onError);
+    return;
   } else if (dataTypes[data.dataType]) {
     data.sampleType = dataTypes[data.dataType];
   } else {
