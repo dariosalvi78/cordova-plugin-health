@@ -66,6 +66,7 @@ var define = function (methodName, params, fn) {
         fn(options);
       } catch (error) {
         onError(error.message);
+        return; // validation failed - do not fall through to native exec with bad data
       }
 
       var args = options ? [options] : [];
