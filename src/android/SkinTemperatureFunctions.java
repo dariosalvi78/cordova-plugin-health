@@ -69,7 +69,7 @@ public class SkinTemperatureFunctions {
         }
 
         LinkedList<SkinTemperatureRecord.Delta> deltas = new LinkedList<>();
-        JSONArray deltaJsonArr = storeObj.getJSONArray("deltas");
+        JSONArray deltaJsonArr = tempObj.getJSONArray("deltas");
         for(int i=0; i < deltaJsonArr.length(); i++) {
             JSONObject deltaObj = deltaJsonArr.getJSONObject(i);
             Instant timestamp = Instant.ofEpochMilli(deltaObj.getLong("time"));
