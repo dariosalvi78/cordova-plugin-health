@@ -6,7 +6,7 @@ Log of changes
 * added oxygen saturation
 * added basal body temperature
 * added core body temperature
-* added skin body temperature on Android
+* added skin temperature on Android
 * added Apple wrist temperature on iOS
 * added menstruation flow and period
 * added vo2max
