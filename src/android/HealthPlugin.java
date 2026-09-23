@@ -349,10 +349,10 @@ public class HealthPlugin extends CordovaPlugin {
             return Vo2MaxFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("skin_temperature")) {
-            return Vo2MaxFunctions.dataTypeToClass();
+            return SkinTemperatureFunctions.dataTypeToClass();
         }
         if (name.equalsIgnoreCase("core_body_temperature")) {
-            return Vo2MaxFunctions.dataTypeToClass();
+            return BodyTemperatureFunctions.dataTypeToClass();
         }
 
         return null;
