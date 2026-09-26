@@ -213,6 +213,7 @@ Example values:
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md). Additional calories (in kcal) and distance (in m) can be added if the query has the `includeCalories` and/or `includeDistance` flags set. **Warning** If you want to fetch calories and/or distance, permission to access those quantities should be requested. |
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in HealthConnect / HealthKit can be found [here](sleep_map.md) <br> in Android it is also possible to retrieve an entire session, in which case the value is an array of sleep stages [ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ...] |
+| apple_sleeping_breathing_disturbances  | 8         |
 | calories.X     | 245.3                             |
 | heart_rate     | 66                                |
 | heart_rate.resting | 66                            |

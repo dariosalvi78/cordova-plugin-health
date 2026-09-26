@@ -367,7 +367,16 @@ Health.prototype.query = function (opts, onSuccess, onError) {
             }
             res.unit = 'sleep';
           } else if (opts.dataType === 'menstruation_flow') {
-            let isFirst = samples[i].metadata.HKMetadataKeyMenstrualCycleStart;
+            let isFirst = true;
+            if (samples[i].metadata && samples[i].metadata.HKMetadataKeyMenstrualCycleStart) {
+              isFirst = samples[i].metadata.HKMetadataKeyMenstrualCycleStart;
+            }
+
+            // check for older HKMenstrualCycleStart
+            if (samples[i].metadata && samples[i].metadata.HKMenstrualCycleStart) {
+              isFirst = samples[i].metadata.HKMenstrualCycleStart;
+            }
+
             res.followsFlowInPeriod = !isFirst;
 
             switch (samples[i].value) {
@@ -636,6 +645,8 @@ Health.prototype.store = function (data, onSuccess, onError) {
       isFirstInPeriod = false;
     }
     data.metadata.HKMetadataKeyMenstrualCycleStart = isFirstInPeriod;
+    // also add the older HKMenstrualCycleStart metadata key for backwards compatibility
+    data.metadata.HKMenstrualCycleStart = isFirstInPeriod;
 
     window.plugins.healthkit.saveSample(data, onSuccess, onError);
 
