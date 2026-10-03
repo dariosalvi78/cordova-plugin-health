@@ -86,7 +86,13 @@
 
   <!-- android -->
   <platform name="android">
-    <framework src="androidx.health.connect:connect-client:1.2.0-alpha06" />
+
+    <!-- Define the variable with a sensible default version -->
+    <preference name="HEALTH_CONNECT_CLIENT_VERSION" default="1.2.0-alpha06" />
+
+    <!-- Reference the variable using $HEALTH_CONNECT_CLIENT_VERSION -->
+    <framework src="androidx.health.connect:connect-client:$HEALTH_CONNECT_CLIENT_VERSION" />
+  
     <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
     <config-file target="AndroidManifest.xml" parent="/*">

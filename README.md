@@ -24,10 +24,12 @@ If you need support for a given data type, please check if it is already impleme
 In Cordova:
 
 ```
-cordova plugin add cordova-plugin-health --variable HEALTH_READ_PERMISSION='App needs read access' --variable HEALTH_WRITE_PERMISSION='App needs write access'
+cordova plugin add cordova-plugin-health --variable HEALTH_READ_PERMISSION='App needs read access' --variable HEALTH_WRITE_PERMISSION='App needs write access' --variable HEALTH_CONNECT_CLIENT_VERSION='1.2.0-alpha06'
 ```
 
 `HEALTH_READ_PERMISSION` and `HEALTH_WRITE_PERMISSION` are shown when the app tries to grant access to data in HealthKit.
+
+`HEALTH_CONNECT_CLIENT_VERSION` (optional) is used to set the version of the Android Health Connect library. Current default is `1.2.0-alpha06`. See library releases [here](https://developer.android.com/jetpack/androidx/releases/health-connect).
 
 ## iOS requirements
 
