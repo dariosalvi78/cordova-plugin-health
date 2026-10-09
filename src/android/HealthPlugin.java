@@ -20,6 +20,7 @@ import androidx.health.connect.client.aggregate.AggregationResultGroupedByDurati
 import androidx.health.connect.client.aggregate.AggregationResultGroupedByPeriod;
 import androidx.health.connect.client.permission.HealthPermission;
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord;
+import androidx.health.connect.client.records.ActivityIntensityRecord;
 import androidx.health.connect.client.records.BasalBodyTemperatureRecord;
 import androidx.health.connect.client.records.BasalMetabolicRateRecord;
 import androidx.health.connect.client.records.BloodGlucoseRecord;
@@ -63,9 +64,7 @@ import androidx.health.connect.client.units.Percentage;
 import androidx.health.connect.client.units.Power;
 
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -354,6 +353,9 @@ public class HealthPlugin extends CordovaPlugin {
         if (name.equalsIgnoreCase("core_body_temperature")) {
             return BodyTemperatureFunctions.dataTypeToClass();
         }
+        if (name.equalsIgnoreCase("activity_intensity")) {
+            return ActivityIntensityFunctions.dataTypeToClass();
+        }
 
         return null;
     }
@@ -629,6 +631,8 @@ public class HealthPlugin extends CordovaPlugin {
                         BodyTemperatureFunctions.populateFromQuery(datapoint, obj);
                     } else if (datapoint instanceof SkinTemperatureRecord) {
                         SkinTemperatureFunctions.populateFromQuery(datapoint, obj);
+                    } else if (datapoint instanceof ActivityIntensityRecord) {
+                        ActivityIntensityFunctions.populateFromQuery(datapoint, obj);
                     } else {
                         callbackContext.error("Sample received of unknown type " + datatype.toString());
                         return;
@@ -781,6 +785,8 @@ public class HealthPlugin extends CordovaPlugin {
                                 dor);
                     } else if (datatype.equalsIgnoreCase("blood_pressure")) {
                         request = BloodPressureFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
+                    } else if (datatype.equalsIgnoreCase("activity_intensity")) {
+                        request = ActivityIntensityFunctions.prepareAggregateGroupByPeriodRequest(timeRange, period, dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
                         return;
@@ -852,6 +858,9 @@ public class HealthPlugin extends CordovaPlugin {
                                 dor);
                     } else if (datatype.equalsIgnoreCase("blood_pressure")) {
                         request = BloodPressureFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration,
+                                dor);
+                    } else if (datatype.equalsIgnoreCase("activity_intensity")) {
+                        request = ActivityIntensityFunctions.prepareAggregateGroupByDurationRequest(timeRange, duration,
                                 dor);
                     } else {
                         callbackContext.error("Datatype not recognized " + datatype);
@@ -925,6 +934,8 @@ public class HealthPlugin extends CordovaPlugin {
                     request = HeartRateFunctions.prepareRestingAggregateRequest(timeRange, dor);
                 } else if (datatype.equalsIgnoreCase("blood_pressure")) {
                     request = BloodPressureFunctions.prepareAggregateRequest(timeRange, dor);
+                } else if (datatype.equalsIgnoreCase("activity_intensity")) {
+                    request = ActivityIntensityFunctions.prepareAggregateRequest(timeRange, dor);
                 } else {
                     callbackContext.error("Datatype not recognized " + datatype);
                     return;
@@ -1021,6 +1032,8 @@ public class HealthPlugin extends CordovaPlugin {
             HeartRateFunctions.populateRestingFromAggregatedQuery(response, retObj);
         } else if (datatype.equalsIgnoreCase("blood_pressure")) {
             BloodPressureFunctions.populateFromAggregatedQuery(response, retObj);
+        } else if (datatype.equalsIgnoreCase("activity_intensity")) {
+            ActivityIntensityFunctions.populateFromAggregatedQuery(response, retObj);
         } else {
             LOG.e(TAG, "Data type not recognized " + datatype);
         }
@@ -1170,6 +1183,8 @@ public class HealthPlugin extends CordovaPlugin {
                 BodyTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, data);
             } else if (datatype.equalsIgnoreCase("skin_temperature")) {
                 SkinTemperatureFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
+            } else if (datatype.equalsIgnoreCase("activity_intensity")) {
+                ActivityIntensityFunctions.prepareStoreRecords(args.getJSONObject(0), st, et, data);
             } else {
                 callbackContext.error("Datatype not supported " + datatype);
                 return;

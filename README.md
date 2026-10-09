@@ -152,6 +152,7 @@ These are currently supported in both Android and iOS. Please notice that older 
 | stairs                 | count | HKQuantityTypeIdentifierFlightsClimbed        |   FloorsClimbedRecord                    |
 | distance               | m     | HKQuantityTypeIdentifierDistanceWalkingRunning + HKQuantityTypeIdentifierDistanceCycling | DistanceRecord |
 | activity               | activityType | HKWorkoutTypeIdentifier                |   ExerciseSessionRecord                  |
+| activity_intensity     | activityIntensity | NA                                |   ActivityIntensityRecord                |
 | appleExerciseTime      | min   | HKQuantityTypeIdentifierAppleExerciseTime     | NA                                       |
 | sleep                  | sleep | HKCategoryTypeIdentifierSleepAnalysis         | SleepSessionRecord                       |
 | apple_sleeping_breathing_disturbances | count | HKQuantityTypeIdentifierAppleSleepingBreathingDisturbances | NA           |
@@ -213,6 +214,7 @@ Example values:
 | steps          | 34                                |
 | distance       | 101.2                             |
 | activity       | "walking"<br />**Notes**: recognized activities and their mappings in Health Connect / HealthKit can be found [here](activities_map.md). Additional calories (in kcal) and distance (in m) can be added if the query has the `includeCalories` and/or `includeDistance` flags set. **Warning** If you want to fetch calories and/or distance, permission to access those quantities should be requested. |
+| activity_intensity | 'moderate' or 'vigorous' <br/>**Notes**: only available on Android |
 | appleExerciseTime | 24 <br/>**Notes**: only available on iOS|
 | sleep       | 'sleep.light' <br />**Notes**: recognized sleep stages and their mappings in HealthConnect / HealthKit can be found [here](sleep_map.md) <br> in Android it is also possible to retrieve an entire session, in which case the value is an array of sleep stages [ { startDate: Date, endDate: Date, stage: 'sleep.light' }, ...] |
 | apple_sleeping_breathing_disturbances  | 8         |
@@ -428,8 +430,9 @@ The following table shows what types are supported and examples of the returned 
 | calories.active | { startDate: Date, endDate: Date, value: 25698.4, unit: 'kcal' } |
 | calories.basal  | { startDate: Date, endDate: Date, value: 3547.3, unit: 'kcal' } |
 | activity        | Android: { startDate: Date, endDate: Date, value: 567000, unit: 'ms' } <br /> iOS: { startDate: Date, endDate: Date, value: { still: { duration: 520000 }, walking: { duration: 223000 }}, unit: 'activitySummary' }<br />**Note:** durations are expressed in milliseconds |
-| sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android only |
+| activity_intensity | { startDate: Date, endDate: Date, value: { duration:1800, moderateDuration:1000, vigorousDuration:800, intensity:1200 }, unit: 's' }  <br/>**Notes**: Android only |
 | appleExerciseTime | { startDate: Date, endDate: Date, value: 500, unit: 'min' }  <br/>**Notes**: iOS only |
+| sleep           | { startDate: Date, endDate: Date, value: 493, unit: 's' }  <br/>**Notes**: Android only |
 | heart_rate        | { startDate: Date, endDate: Date, value: { average: 72, min: 68, max: 82 }, unit: 'bpm' } |
 | heart_rate.resting| { startDate: Date, endDate: Date, value: { average: 72, min: 68, max: 82 }, unit: 'bpm' } |
 | heart_rate.variability| { startDate: Date, endDate: Date, value: { average: 36, min: 24, max: 48 }, unit: 'ms' } <br/>**Notes**: iOS only |
@@ -443,7 +446,6 @@ The following table shows what types are supported and examples of the returned 
 - The start and end dates returned are the date of the first and the last available samples. If no samples are found, start and end may not be set.
 - When bucketing, buckets will include the whole hour / day / month / week / year where start and end times fall into. For example, if your start time is 2016-10-21 10:53:34, the first daily bucket will start at 2016-10-21 00:00:00.
 - Weeks start on Monday.
-- Aggreagated height only exists on Android.
 
 
 #### Android quirks
