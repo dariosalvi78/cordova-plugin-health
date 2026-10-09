@@ -1,5 +1,7 @@
 package org.apache.cordova.health;
 
+import android.os.Build;
+
 import androidx.health.connect.client.aggregate.AggregateMetric;
 import androidx.health.connect.client.aggregate.AggregationResult;
 import androidx.health.connect.client.records.ActivityIntensityRecord;
@@ -46,10 +48,19 @@ public class ActivityIntensityFunctions {
     }
 
     public static void populateFromAggregatedQuery(AggregationResult response, JSONObject retObj) throws JSONException {
-        if (response.get(ActivityIntensityRecord.DURATION_TOTAL) != null) {
+        if (
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) && (
+                        (response.get(ActivityIntensityRecord.DURATION_TOTAL) != null) ||
+                        (response.get(ActivityIntensityRecord.INTENSITY_MINUTES_TOTAL) != null) ||
+                        (response.get(ActivityIntensityRecord.MODERATE_DURATION_TOTAL) != null) ||
+                        (response.get(ActivityIntensityRecord.VIGOROUS_DURATION_TOTAL) != null)
+                )
+        ) {
             JSONObject aiStats = new JSONObject();
-            long total = response.get(ActivityIntensityRecord.DURATION_TOTAL).getSeconds();
-            aiStats.put("duration", total);
+            if (response.get(ActivityIntensityRecord.DURATION_TOTAL) != null) {
+                long total = response.get(ActivityIntensityRecord.DURATION_TOTAL).getSeconds();
+                aiStats.put("duration", total);
+            }
 
             if (response.get(ActivityIntensityRecord.INTENSITY_MINUTES_TOTAL) != null) {
                 long intensityMinutes = response.get(ActivityIntensityRecord.INTENSITY_MINUTES_TOTAL);
