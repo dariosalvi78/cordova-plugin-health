@@ -1,6 +1,11 @@
 Log of changes
 ==============
 
+### v3.3.1
+
+* added activity_intensity on Android
+* added the possibility to specify the Health Connect library version
+
 ### v3.3.0
 
 * added oxygen saturation
