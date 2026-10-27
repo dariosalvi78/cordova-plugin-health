@@ -35,78 +35,58 @@ module.exports = {
     if (opts.endDate && (typeof opts.endDate == 'object'))
       opts.endDate = opts.endDate.getTime();
     exec((data) => {
-      // here we use a recursive function instead of a simple loop
-      // this is to deal with additional queries required for the special case
-      // of activity with calories and/or distance
-      finalizeResult = (i) => {
-        if (i >= data.length) {
-          // completed, return results
-          onSuccess(data);
-        } else {
-          // iterate
-          // convert timestamps to date
-          if (data[i].startDate) data[i].startDate = new Date(data[i].startDate)
-          if (data[i].endDate) data[i].endDate = new Date(data[i].endDate)
+      // convert timestamps to dates with a plain loop (no recursion, so no stack overflow on large results)
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].startDate) data[i].startDate = new Date(data[i].startDate)
+        if (data[i].endDate) data[i].endDate = new Date(data[i].endDate)
 
-          if (opts.dataType == 'sleep' && opts.sleepSession) {
-            // convert start and end dates for single stages
-            for (let stageI = 0; stageI < data[i].value.length; stageI++) {
-              data[i].value[stageI].startDate = new Date(data[i].value[stageI].startDate)
-              data[i].value[stageI].endDate = new Date(data[i].value[stageI].endDate)
-            }
-          }
-
-          if (opts.dataType == 'activity' && (opts.includeCalories || opts.includeDistance)) {
-            // we need to also fetch calories and/or distance
-
-            // helper function to get aggregated calories for that activity
-            getCals = (onDone) => {
-              this.queryAggregated({
-                startDate: data[i].startDate,
-                endDate: data[i].endDate,
-                dataType: 'calories.active'
-              }, (cals) => {
-                data[i].calories = cals.value
-                onDone()
-              }, onError)
-            }
-            // helper function to get aggregated distance for that activity
-            getDist = (onDone) => {
-              this.queryAggregated({
-                startDate: data[i].startDate,
-                endDate: data[i].endDate,
-                dataType: 'distance'
-              }, (dist) => {
-                data[i].distance = dist.value
-                onDone()
-              }, onError)
-            }
-
-            if (opts.includeCalories) {
-              // calories are needed, fetch them
-              getCals(() => {
-                // now get the distance, if needed
-                if (opts.includeDistance) {
-                  getDist(() => {
-                    finalizeResult(i + 1)
-                  })
-                } else {
-                  // no distance needed, move on
-                  finalizeResult(i + 1)
-                }
-              })
-            } else {
-              // distance only is needed
-              getDist(() => {
-                finalizeResult(i + 1)
-              })
-            }
-          } else {
-            finalizeResult(i + 1)
+        if (opts.dataType == 'sleep' && opts.sleepSession) {
+          // convert start and end dates for single stages
+          for (let stageI = 0; stageI < data[i].value.length; stageI++) {
+            data[i].value[stageI].startDate = new Date(data[i].value[stageI].startDate)
+            data[i].value[stageI].endDate = new Date(data[i].value[stageI].endDate)
           }
         }
       }
-      finalizeResult(0);
+
+      if (!(opts.dataType == 'activity' && (opts.includeCalories || opts.includeDistance))) {
+        onSuccess(data)
+        return
+      }
+
+      // activity with calories and/or distance: additional queries are needed,
+      // run them sequentially. Each step resumes from an asynchronous native
+      // callback, so the call stack does not grow with the number of samples.
+      let i = 0
+      const processNext = () => {
+        if (i >= data.length) {
+          onSuccess(data)
+          return
+        }
+        const item = data[i]
+        const steps = []
+        if (opts.includeCalories) steps.push(['calories.active', 'calories'])
+        if (opts.includeDistance) steps.push(['distance', 'distance'])
+        let s = 0
+        const runStep = () => {
+          if (s >= steps.length) {
+            i++
+            processNext()
+            return
+          }
+          const [dataType, field] = steps[s++]
+          this.queryAggregated({
+            startDate: item.startDate,
+            endDate: item.endDate,
+            dataType: dataType
+          }, (res) => {
+            item[field] = res.value
+            runStep()
+          }, onError)
+        }
+        runStep()
+      }
+      processNext()
     }, onError, "health", "query", [opts])
   },
 
