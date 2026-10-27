@@ -1,6 +1,10 @@
 Log of changes
 ==============
 
+### v3.3.2
+
+* removed recursive function in android that caused stack overflow
+
 ### v3.3.1
 
 * added activity_intensity on Android
