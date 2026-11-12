@@ -44,10 +44,10 @@ public class HeartRateFunctions {
 
     public static void populateFromQuery(Record datapoint, JSONArray resultset) throws JSONException {
         HeartRateRecord hrDP = (HeartRateRecord) datapoint;
-        JSONObject hrObj = new JSONObject();
 
         List<HeartRateRecord.Sample> hrSamples = hrDP.getSamples();
         for (HeartRateRecord.Sample sample : hrSamples) {
+            JSONObject hrObj = new JSONObject();
             long bpm = sample.getBeatsPerMinute();
             hrObj.put("startDate", sample.getTime().toEpochMilli());
             hrObj.put("endDate",  sample.getTime().toEpochMilli());
